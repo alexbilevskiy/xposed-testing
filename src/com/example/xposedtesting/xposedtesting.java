@@ -10,7 +10,14 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 import static de.robv.android.xposed.XposedHelpers.findAndHookMethod;
 
-public class xposedtesting extends Loggable implements IXposedHookInitPackageResources, IXposedHookLoadPackage {
+public class xposedtesting implements IXposedHookInitPackageResources, IXposedHookLoadPackage {
+
+    Loggable logger;
+
+    public xposedtesting()
+    {
+        this.logger = new Loggable(false);
+    }
 
     public void handleInitPackageResources(InitPackageResourcesParam resparam) throws Throwable {
         if (resparam.packageName.equals("de.robv.android.xposed.installer")) {
@@ -20,14 +27,11 @@ public class xposedtesting extends Loggable implements IXposedHookInitPackageRes
 
     public void handleLoadPackage(final XC_LoadPackage.LoadPackageParam lpparam) throws Throwable {
         switch (lpparam.packageName) {
-            case("com.facebook.katana"):
-                prepareApp(lpparam, new Facebook());
-                break;
             case("com.nianticproject.ingress"):
                 prepareApp(lpparam, new Ingress());
                 break;
             case("com.mishiranu.dashchan"):
-                log("Dashchan: @TODO");
+                logger.log("Dashchan: @TODO");
                 break;
             default:
                 break;
@@ -37,13 +41,13 @@ public class xposedtesting extends Loggable implements IXposedHookInitPackageRes
 
     private void prepareApp(final XC_LoadPackage.LoadPackageParam lpparam, final DefaultAbstractApp hookerClass)
     {
-        log("Loaded " + lpparam.packageName);
+        logger.log("Loaded " + lpparam.packageName);
         findAndHookMethod(Application.class, "attach", Context.class, new XC_MethodHook() {
             @Override
             protected void afterHookedMethod(MethodHookParam param) {
-                log("Preparing " + hookerClass.getName());
+                logger.log("Preparing " + hookerClass.getName());
                 hookerClass.prepare(lpparam);
-                log("Prepared " + hookerClass.getName());
+                logger.log("Prepared " + hookerClass.getName());
             }
         });
 

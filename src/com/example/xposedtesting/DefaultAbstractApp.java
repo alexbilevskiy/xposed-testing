@@ -5,7 +5,7 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 /**
  * Created by Alex on 07/09/2016.
  */
-public abstract class DefaultAbstractApp extends Loggable {
+public abstract class DefaultAbstractApp {
 
     public abstract String getName();
 

