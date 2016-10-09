@@ -422,13 +422,16 @@ public class Ingress extends DefaultAbstractApp {
             logger.log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
         }
 
+        //do not wrap "uncaptured" to "unca..."
         final Class<?> ajk = findClass("o.ajk", lpparam.classLoader);
         try {
             findAndHookMethod(ajk, "ˊ", String.class, int.class, new XC_MethodHook() {
                 @Override
                 protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                    logger.log("ajk: tried to wrap string `" + (String) param.args[0] + "` to " + (int) param.args[1]);
-                    param.args[1] = (int) param.args[1] + 1;
+                    if (param.args[0].equals("uncaptured")) {
+
+                        param.setResult(param.args[0]);
+                    }
                 }
             });
         } catch (Throwable e) {
