@@ -343,7 +343,6 @@ public class Ingress extends DefaultAbstractApp {
                         pref.reload();
                     }
                     Object scannerKnobs = param.getResult();
-//                    log("p: scanner rangeM: " + getIntField(scannerKnobs, "rangeM"));
                     setIntField(scannerKnobs, "rangeM", pref.getInt("scannerRangeM", 300));
                     param.setResult(scannerKnobs);
                 }
@@ -409,6 +408,19 @@ public class Ingress extends DefaultAbstractApp {
                     String fullString = (String) param.args[0];
                     log("portalInfoHud: string: " + fullString);
                     param.setResult(fullString);
+                }
+            });
+        } catch (Throwable e) {
+            log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
+        }
+
+        //disable disabling immersive move when opening COMM
+        final Class<?> ave = findClass("o.ave", lpparam.classLoader);
+        try {
+            findAndHookMethod(ave, "ʼ", new XC_MethodHook() {
+                @Override
+                protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                    param.setResult(null);
                 }
             });
         } catch (Throwable e) {
