@@ -1,0 +1,38 @@
+//vk candy client beta subscription bypass
+if (lpparam.packageName.equals("ru.cd.candy")) {
+    log("Loaded app: " + lpparam.packageName);
+    findAndHookMethod("ru.cd.candy.MainActivity", lpparam.classLoader, "applyTheme", long.class, Context.class, new XC_MethodHook() {
+        @Override
+        protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+            log("Candy: spoofing argument " + param.args[0].toString() + " with 105918493");
+            param.args[0] = 105918493;
+        }
+
+    });
+}
+
+//opera mini: stop replacing google search with yandex
+if (lpparam.packageName.equals("com.opera.mini.native")) {
+    log("Loaded app: " + lpparam.packageName);
+    try {
+        Class a = findClass("c", lpparam.classLoader);
+        try {
+            findAndHookMethod(a, "p", Context.class, new XC_MethodHook() {
+                @Override
+                protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                    param.setResult("rumbastopper:google_play:m");
+                }
+            });
+        } catch (java.lang.NoSuchMethodError err) {
+            log("Opera: no such method! " + err.toString());
+        }
+    } catch (XposedHelpers.ClassNotFoundError err) {
+        log("Opera: class not found! " + err.toString());
+    }
+}
+
+//        findAndHookMethod(Application.class, "attach", Context.class, new XC_MethodHook() {
+//            @Override
+//            protected void afterHookedMethod(MethodHookParam param) {
+//            }
+//        });

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">xposedTesting</string>
+    <string name="app_desc">xposed test module</string>
+    <string name="nearValue_title">\'near\' (float)</string>
+    <string name="nearValue_hint">15</string>
+    <string name="farValue_title">\'far\' (float)</string>
+    <string name="farValue_hint">2048</string>
+    <string name="fieldOfViewValue_title">\'fieldOfView\' (float)</string>
+    <string name="fieldOfViewValue_hint">40</string>
+</resources>

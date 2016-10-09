@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
+
+    <TextView android:layout_width="fill_parent"
+              android:layout_height="wrap_content"
+              android:text="@string/nearValue_title"/>
+    <EditText android:id="@+id/nearValue"
+              android:layout_height="wrap_content"
+              android:layout_width="match_parent"
+              android:inputType="numberSigned"
+              android:hint="@string/nearValue_hint"/>
+
+    <TextView android:layout_width="fill_parent"
+              android:layout_height="wrap_content"
+              android:text="@string/farValue_title"/>
+    <EditText android:id="@+id/farValue"
+              android:layout_height="wrap_content"
+              android:layout_width="match_parent"
+              android:inputType="numberSigned"
+              android:hint="@string/farValue_hint"/>
+
+    <TextView android:layout_width="fill_parent"
+              android:layout_height="wrap_content"
+              android:text="@string/fieldOfViewValue_title"/>
+    <EditText android:id="@+id/fieldOfViewValue"
+              android:layout_height="wrap_content"
+              android:layout_width="match_parent"
+              android:inputType="numberSigned"
+              android:hint="@string/fieldOfViewValue_hint"/>
+
+</LinearLayout>
