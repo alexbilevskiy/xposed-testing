@@ -333,6 +333,7 @@ public class Ingress extends DefaultAbstractApp {
         final Class<?> scannerKnobs = findClass("com.nianticproject.ingress.knobs.ScannerKnobs", lpparam.classLoader);
         final Class<?> clientFeatureKnobBundle = findClass("com.nianticproject.ingress.knobs.ClientFeatureKnobBundle", lpparam.classLoader);
         try {
+            //public static ScannerKnobs \u141d()
             findAndHookMethod(p, "ᐝ", new XC_MethodHook() {
                 @Override
                 protected void afterHookedMethod(MethodHookParam param) throws Throwable {
@@ -463,8 +464,9 @@ public class Ingress extends DefaultAbstractApp {
 //        }
 
         //disable disabling immersive move when opening COMM
-        final Class<?> ave = findClass("o.avn", lpparam.classLoader);
+        final Class<?> ave = findClass("o.avo", lpparam.classLoader);
         try {
+            //this.\u02cf.getWindow().getDecorView().setSystemUiVisibility(256);
             findAndHookMethod(ave, "ʼ", new XC_MethodHook() {
                 @Override
                 protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
@@ -476,8 +478,9 @@ public class Ingress extends DefaultAbstractApp {
         }
 
         //do not wrap "uncaptured" to "unca..."
-        final Class<?> ajk = findClass("o.ajt", lpparam.classLoader);
+        final Class<?> ajk = findClass("o.aju", lpparam.classLoader);
         try {
+            //    private String \u02ca(final String s, final int n) {
             findAndHookMethod(ajk, "ˊ", String.class, int.class, new XC_MethodHook() {
                 @Override
                 protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
