@@ -1,5 +1,7 @@
 package com.example.xposedtesting;
 
+import android.app.AndroidAppHelper;
+import android.content.Context;
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XSharedPreferences;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
@@ -26,22 +28,20 @@ public class Ingress extends DefaultAbstractApp {
     XSharedPreferences pref;
     boolean debug;
 
-
-    public Ingress() {
-        this.pref = new XSharedPreferences("com.example.xposedtesting", "user_settings");
-        this.debug = pref.getBoolean("debug", false);
-        this.logger = new Loggable(debug);
-    }
-
     public String getName() {
         return "Ingress";
     }
 
     public void prepare(final XC_LoadPackage.LoadPackageParam lpparam) {
+        this.pref = new XSharedPreferences("com.example.xposedtesting", "user_settings");
+        this.debug = pref.getBoolean("debug", false);
+        this.logger = new Loggable(debug);
+        Context context = (Context) AndroidAppHelper.currentApplication();
+
         logger.log("Preparing Ingress: hookBadlogicCameraView");
         hookBadlogicCameraView(lpparam);
-        logger.log("Preparing Ingress: hookIngressNet");
-        hookIngressNet(lpparam);
+//        logger.log("Preparing Ingress: hookIngressNet");
+//        hookIngressNet(lpparam);
         logger.log("Preparing Ingress: hookIngressScanner");
         hookIngressScanner(lpparam);
         logger.log("Prepare Ingress success!");
@@ -329,7 +329,7 @@ public class Ingress extends DefaultAbstractApp {
         final XSharedPreferences pref = new XSharedPreferences("com.example.xposedtesting", "user_settings");
         final Boolean debug = pref.getBoolean("debug", false);
 
-        final Class<?> p = findClass("o.p", lpparam.classLoader);
+        final Class<?> p = findClass("o.r", lpparam.classLoader);
         final Class<?> scannerKnobs = findClass("com.nianticproject.ingress.knobs.ScannerKnobs", lpparam.classLoader);
         final Class<?> clientFeatureKnobBundle = findClass("com.nianticproject.ingress.knobs.ClientFeatureKnobBundle", lpparam.classLoader);
         try {
@@ -347,70 +347,123 @@ public class Ingress extends DefaultAbstractApp {
         } catch (Throwable e) {
             logger.log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
         }
-        try {
-            findAndHookMethod(p, "ʻ", new XC_MethodHook() {
-                @Override
-                protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                    if (debug) {
-                        pref.reload();
-                    }
-                    Object clientFeatureKnobBundle = param.getResult();
-                    setBooleanField(clientFeatureKnobBundle, "showGlobalMap", pref.getBoolean("showGlobalMap", true));
-                    param.setResult(clientFeatureKnobBundle);
-                }
-            });
-        } catch (Throwable e) {
-            logger.log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
-        }
 
-        final Class<?> ze = findClass("o.ze", lpparam.classLoader);
-        final Class<?> zeif = findClass("o.ze$if", lpparam.classLoader);
-        final Class<?> u1d2d = findClass("o.ᴭ", lpparam.classLoader);
-        final Class<?> Color = findClass("com.badlogic.gdx.graphics.Color", lpparam.classLoader);
-        try {
-            //public if(final \u1d2d \u02ca, final Color \u02ce, final int \u02cf, final float \u141d, final float \u02bb, final float \u02bc, final float \u02bd)
-            findAndHookConstructor(zeif, ze, u1d2d, Color, int.class, float.class, float.class, float.class, float.class, new XC_MethodHook() {
-                @Override
-                protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                    if (debug) {
-                        pref.reload();
-                    }
-                    Object color = param.args[2];
-                    float r, g, b, a;
-                    r = getFloatField(color, "r");
-                    g = getFloatField(color, "g");
-                    b = getFloatField(color, "b");
-                    a = getFloatField(color, "a");
-                    logger.debugLog("color: r:" + r + ", g: " + g + ", b: " + b + ", a: " + a);
-
-                    if (pref.getBoolean("colorEnabled", false)) {
-                        setFloatField(color, "r", pref.getFloat("colorR", 1.0f));
-                        setFloatField(color, "g", pref.getFloat("colorG", 1.0f));
-                        setFloatField(color, "b", pref.getFloat("colorB", 1.0f));
-                        setFloatField(color, "a", pref.getFloat("colorA", 1.0f));
-                    }
-                }
-            });
-        } catch (Throwable e) {
-            logger.log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
-        }
-
-        final Class<?> portalInfoHudIf = findClass("com.nianticproject.ingress.common.ui.hud.PortalInfoHud$if", lpparam.classLoader);
-        try {
-            findAndHookMethod(portalInfoHudIf, "ˊ", String.class, new XC_MethodHook() {
-                @Override
-                protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                    String fullString = (String) param.args[0];
-                    logger.log("portalInfoHud: string: " + fullString);
-                    param.setResult(fullString);
-                }
-            });
-        } catch (Throwable e) {
-            logger.log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
-        }
+//        final Class<?> ze = findClass("o.ze", lpparam.classLoader);
+//        final Class<?> zeif = findClass("o.ze$if", lpparam.classLoader);
+//        final Class<?> u1d2d = findClass("o.ᴭ", lpparam.classLoader);
+//        final Class<?> Color = findClass("com.badlogic.gdx.graphics.Color", lpparam.classLoader);
+//        try {
+//            //public if(final \u1d2d \u02ca, final Color \u02ce, final int \u02cf, final float \u141d, final float \u02bb, final float \u02bc, final float \u02bd)
+//            findAndHookConstructor(zeif, ze, u1d2d, Color, int.class, float.class, float.class, float.class, float.class, new XC_MethodHook() {
+//                @Override
+//                protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+//                    if (debug) {
+//                        pref.reload();
+//                    }
+//                    Object color = param.args[2];
+//                    float r, g, b, a;
+//                    r = getFloatField(color, "r");
+//                    g = getFloatField(color, "g");
+//                    b = getFloatField(color, "b");
+//                    a = getFloatField(color, "a");
+//                    logger.debugLog("color: r:" + r + ", g: " + g + ", b: " + b + ", a: " + a);
+//
+//                    if (pref.getBoolean("colorEnabled", false)) {
+//                        setFloatField(color, "r", pref.getFloat("colorR", 1.0f));
+//                        setFloatField(color, "g", pref.getFloat("colorG", 1.0f));
+//                        setFloatField(color, "b", pref.getFloat("colorB", 1.0f));
+//                        setFloatField(color, "a", pref.getFloat("colorA", 1.0f));
+//                    }
+//                }
+//            });
+//        } catch (Throwable e) {
+//            logger.log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
+//        }
+//        final Class<?> gameEntityBuilder = findClass("com.nianticproject.ingress.gameentity.GameEntityBuilder", lpparam.classLoader);
+//        final Class<?> mapGameEntity = findClass("com.nianticproject.ingress.gameentity.GameEntityBuilder$MapGameEntity", lpparam.classLoader);
+//        final Class<?> controllingTeam = findClass("com.nianticproject.ingress.gameentity.components.ControllingTeam", lpparam.classLoader);
+//        final Class<?> simpleTeam = findClass("com.nianticproject.ingress.gameentity.components.SimpleTeam", lpparam.classLoader);
+//        final Class<?> portal = findClass("com.nianticproject.ingress.gameentity.components.Portal", lpparam.classLoader);
+//        final Class<?> team = findClass("com.nianticproject.ingress.shared.Team", lpparam.classLoader);
+//        final Class<?> anp = findClass("o.anp", lpparam.classLoader);
+//
+//
+//        try {
+//            hookAllMethods(mapGameEntity, "getComponent", new XC_MethodHook() {
+//                @Override
+//                protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+//                    Object param0 = param.args[0];
+//                    if (param0.toString().equals("interface com.nianticproject.ingress.gameentity.components.ControllingTeam")) {
+//                        try {
+//                            String guid = (String) getObjectField(param.thisObject, "guid");
+//                            if (!Pattern.matches("[a-z0-9]{32}\\.[0-9]{1,2}", guid)) {
+//                                logger.debugLog("getComponent: guid not portal's: " + guid);
+//                                return;
+//                            }
+//                            StackTraceElement[] trace = Thread.currentThread().getStackTrace();
+//                            if (!trace[5].getClassName().equals("o.ze")) {
+//                                return;
+//                            }
+//                        } catch (Throwable e) {
+//                            logger.log("EXCEPTION in getComponent: " + e.getMessage() + ", " + e.getClass().toString());
+//                        }
+//                    }
+//                }
+//            });
+//            findAndHookMethod(team, "ˊ", String.class, new XC_MethodHook() {
+//                @Override
+//                protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+//                    logger.log("getComponent: team from string: "  + param.args[0]);
+//                }
+//            });
+//
+//            findAndHookMethod(simpleTeam, "getTeam", new XC_MethodHook() {
+//                @Override
+//                protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+//                    StackTraceElement[] trace = Thread.currentThread().getStackTrace();
+//                    if (!trace[5].getClass().toString().equals("o.ze")) {
+//                        return;
+//                    }
+//
+//                    Object result = param.getResult();
+//                    logger.log("getComponent: hooked getTeam, replacing " + getObjectField(result, "ˏ"));
+//                    Field teamField = simpleTeam.getDeclaredField("team");
+//                    teamField.setAccessible(true);
+//                    Class<Enum> enumType = (Class<Enum>) teamField.getType();
+//                    Object fakeTeam;
+//
+//                    try {
+//                        //fakeTeam = callStaticMethod(team, "ˊ", "ˋ");
+//                        //param.setResult(fakeTeam);
+//                    } catch (Throwable e) {
+//                        logger.log("EXCEPTION in getComponent team: " + e.getMessage() + ", " + e.getClass().toString());
+//                    }
+//                    //Enum enumValue = Enum.valueOf(enumType, enumType.getDeclaredFields()[1].getName());
+//                    //setObjectField(result, "ˏ", "ENLIGHTENED");
+//                }
+//            });
+//
+//        } catch (Throwable e) {
+//            logger.log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
+//        }
+//
+//
+//        final Class<?> portalInfoHudIf = findClass("com.nianticproject.ingress.common.ui.hud.PortalInfoHud$if", lpparam.classLoader);
+//        try {
+//            findAndHookMethod(portalInfoHudIf, "ˊ", String.class, new XC_MethodHook() {
+//                @Override
+//                protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+//                    String fullString = (String) param.args[0];
+//                    logger.log("portalInfoHud: string: " + fullString);
+//                    param.setResult(fullString);
+//                }
+//            });
+//        } catch (Throwable e) {
+//            logger.log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
+//        }
 
         //disable disabling immersive move when opening COMM
-        final Class<?> ave = findClass("o.ave", lpparam.classLoader);
+        final Class<?> ave = findClass("o.avn", lpparam.classLoader);
         try {
             findAndHookMethod(ave, "ʼ", new XC_MethodHook() {
                 @Override
@@ -423,7 +476,7 @@ public class Ingress extends DefaultAbstractApp {
         }
 
         //do not wrap "uncaptured" to "unca..."
-        final Class<?> ajk = findClass("o.ajk", lpparam.classLoader);
+        final Class<?> ajk = findClass("o.ajt", lpparam.classLoader);
         try {
             findAndHookMethod(ajk, "ˊ", String.class, int.class, new XC_MethodHook() {
                 @Override
