@@ -11,7 +11,7 @@ public class Loggable {
         this.debug = debug;
     }
     public void log(String msg) {
-        XposedBridge.log("xfbt: " + msg);
+        XposedBridge.log("xtst: " + msg);
     }
 
     public void debugLog(String msg)

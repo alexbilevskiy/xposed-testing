@@ -36,12 +36,17 @@ public class Ingress extends DefaultAbstractApp {
         this.pref = new XSharedPreferences("com.example.xposedtesting", "user_settings");
         this.debug = pref.getBoolean("debug", false);
         this.logger = new Loggable(debug);
+
+        if (!pref.getBoolean("enabled", false)) {
+            logger.log("Ingress: disabled, not hooking...");
+            return;
+        }
         Context context = (Context) AndroidAppHelper.currentApplication();
 
         logger.log("Preparing Ingress: hookBadlogicCameraView");
         hookBadlogicCameraView(lpparam);
-//        logger.log("Preparing Ingress: hookIngressNet");
-//        hookIngressNet(lpparam);
+        logger.log("Preparing Ingress: hookIngressNet");
+        hookIngressNet(lpparam);
         logger.log("Preparing Ingress: hookIngressScanner");
         hookIngressScanner(lpparam);
         logger.log("Prepare Ingress success!");
@@ -200,10 +205,10 @@ public class Ingress extends DefaultAbstractApp {
 
     private void hookIngressNet(final XC_LoadPackage.LoadPackageParam lpparam) {
 
-        final Class<?> s = findClass("o.s", lpparam.classLoader);
-        final Class<?> asj = findClass("o.asj", lpparam.classLoader);
+        final Class<?> s = findClass("o.u", lpparam.classLoader);
+        final Class<?> asj = findClass("o.ast", lpparam.classLoader);
         try {
-            //public static InputStream \u02ca(final URI uri, final asj asj, final String s)
+            //public static InputStream \u02ca(final URI uri, final ast ast, final String s)
             findAndHookMethod(s, "ˊ", URI.class, asj, String.class, new XC_MethodHook() {
                 @Override
                 protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
@@ -256,9 +261,9 @@ public class Ingress extends DefaultAbstractApp {
         } catch (Throwable e) {
             logger.log("EXCEPTION in IngressNet: " + e.getMessage() + ", " + e.getClass().toString());
         }
-        final Class<?> aln = findClass("o.aln", lpparam.classLoader);
+        final Class<?> aln = findClass("o.alx", lpparam.classLoader);
         try {
-            //public static InputStream \u02ca(final aln aln, final URI uri, final int n, final Map<String, List<String>> map, final InputStream inputStream, final String s)
+            //public static InputStream \u02ca(final alx alx, final URI uri, final int n, final Map<String, List<String>> map, final InputStream inputStream, final String s)
             findAndHookMethod(s, "ˊ", aln, URI.class, int.class, Map.class, InputStream.class, String.class, new XC_MethodHook() {
                 @Override
                 protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
@@ -311,24 +316,24 @@ public class Ingress extends DefaultAbstractApp {
             logger.log("EXCEPTION in IngressNet: " + e.getMessage() + ", " + e.getClass().toString());
         }
 
-        final Class<?> ufecb = findClass("o.ﻋ", lpparam.classLoader);
-        try {
-            findAndHookMethod(ufecb, "ˊ", InputStream.class, OutputStream.class, new XC_MethodHook() {
-                @Override
-                protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                    Long ret = (Long) param.getResult();
-                    logger.debugLog("ufecb: readed: " + ret.toString());
-                }
-            });
-        } catch (Throwable e) {
-            logger.log("EXCEPTION in IngressNet: " + e.getMessage() + ", " + e.getClass().toString());
-        }
+//        final Class<?> ufecb = findClass("o.ﻋ", lpparam.classLoader);
+//        try {
+//            findAndHookMethod(ufecb, "ˊ", InputStream.class, OutputStream.class, new XC_MethodHook() {
+//                @Override
+//                protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+//                    Long ret = (Long) param.getResult();
+//                    logger.debugLog("ufecb: readed: " + ret.toString());
+//                }
+//            });
+//        } catch (Throwable e) {
+//            logger.log("EXCEPTION in IngressNet: " + e.getMessage() + ", " + e.getClass().toString());
+//        }
     }
 
     private void hookIngressScanner(final XC_LoadPackage.LoadPackageParam lpparam) {
         final XSharedPreferences pref = new XSharedPreferences("com.example.xposedtesting", "user_settings");
-        final Boolean debug = pref.getBoolean("debug", false);
 
+        //scanner draw radius
         final Class<?> p = findClass("o.r", lpparam.classLoader);
         final Class<?> scannerKnobs = findClass("com.nianticproject.ingress.knobs.ScannerKnobs", lpparam.classLoader);
         final Class<?> clientFeatureKnobBundle = findClass("com.nianticproject.ingress.knobs.ClientFeatureKnobBundle", lpparam.classLoader);
