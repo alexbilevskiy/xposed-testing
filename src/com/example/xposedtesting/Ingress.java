@@ -12,11 +12,14 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
+import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.*;
 import java.net.URI;
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
 import static de.robv.android.xposed.XposedHelpers.*;
@@ -271,6 +274,7 @@ public class Ingress extends DefaultAbstractApp {
 
                 @Override
                 protected void afterHookedMethod(MethodHookParam param) throws IOException {
+                    String regex = pref.getString("commFilter", "");
                     URI uri = (URI) param.args[1];
                     Integer httpCode = (Integer) param.args[2];
                     Map<String, List<String>> map = (Map) param.args[3];
@@ -283,7 +287,34 @@ public class Ingress extends DefaultAbstractApp {
                         while ((length = origIs.read(buffer)) != -1) {
                             inputData.write(buffer, 0, length);
                         }
-                        BufferedInputStream fakeIs = new BufferedInputStream(new ByteArrayInputStream(inputData.toByteArray()));
+                        byte[] inputDataBytes = inputData.toByteArray();
+                        if (uri.toString().equals("https://m-dot-betaspike.appspot.com/rpc/gameplay/getPaginatedPlexts")) {
+                            try {
+                                JSONObject json = new JSONObject(inputData.toString());
+                                JSONArray result = json.getJSONArray("result");
+                                JSONArray resultFiltered = new JSONArray();
+                                for (int i = 0; i < result.length(); i++) {
+                                    JSONArray row = (JSONArray) result.get(i);
+                                    JSONObject val = (JSONObject)row.get(2);
+                                    String text = val.getJSONObject("plext").getString("text");
+                                    //logger.debugLog("Matching " + regex + " against " + text);
+                                    Pattern pattern = Pattern.compile(regex, Pattern.DOTALL | Pattern.MULTILINE);
+                                    if (pattern.matcher(text).find()) {
+                                        logger.log("COMM text filtered: " + text);
+                                        continue;
+                                    }
+                                    resultFiltered.put(row);
+                                }
+                                json.put("result", resultFiltered);
+                                inputDataBytes = json.toString().getBytes();
+                            } catch (Throwable e) {
+                                logger.log("JSON EXCEPTION " + e.getMessage());
+                            }
+
+                        }
+
+
+                        BufferedInputStream fakeIs = new BufferedInputStream(new ByteArrayInputStream(inputDataBytes));
                         param.setResult(fakeIs);
                     } else {
                         logger.debugLog("s: input stream: NOT GZIP! " + param.getResult().getClass().toString());
@@ -316,18 +347,18 @@ public class Ingress extends DefaultAbstractApp {
             logger.log("EXCEPTION in IngressNet: " + e.getMessage() + ", " + e.getClass().toString());
         }
 
-//        final Class<?> ufecb = findClass("o.ﻋ", lpparam.classLoader);
-//        try {
-//            findAndHookMethod(ufecb, "ˊ", InputStream.class, OutputStream.class, new XC_MethodHook() {
-//                @Override
-//                protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-//                    Long ret = (Long) param.getResult();
-//                    logger.debugLog("ufecb: readed: " + ret.toString());
-//                }
-//            });
-//        } catch (Throwable e) {
-//            logger.log("EXCEPTION in IngressNet: " + e.getMessage() + ", " + e.getClass().toString());
-//        }
+        final Class<?> up = findClass("o.up", lpparam.classLoader);
+        final Class<?> tp = findClass("o.tp", lpparam.classLoader);
+        try {
+            findAndHookConstructor(up, tp, String.class, new XC_MethodHook() {
+                @Override
+                protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                    logger.debugLog("up: construct: `" + param.args[0].toString() + "`, `" + param.args[1].toString() + "`");
+                }
+            });
+        } catch (Throwable e) {
+            logger.log("EXCEPTION in IngressNet: " + e.getMessage() + ", " + e.getClass().toString());
+        }
     }
 
     private void hookIngressScanner(final XC_LoadPackage.LoadPackageParam lpparam) {
