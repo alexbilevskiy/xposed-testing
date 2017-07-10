@@ -429,7 +429,7 @@ public class Ingress extends DefaultAbstractApp {
                     String hookedClass = param.thisObject.getClass().toString();
                     String label = param.args[0].toString();
                     if (label.equals("alexbilevskiy")) {
-                        logger.log("HOOKED setText `" + label + "` in " + hookedClass);
+                        logger.debugLog("HOOKED setText `" + label + "` in " + hookedClass);
                         incrementMethodDepth(depthKey);
                         callMethod(param.thisObject, "setColor", 1.0f, 0.0f, 0.0f, 1.0f);
                         decrementMethodDepth(depthKey);
@@ -437,7 +437,7 @@ public class Ingress extends DefaultAbstractApp {
                         return;
                     }
                     if (label.equals("vl309")) {
-                        logger.log("HOOKED setText `" + label + "` in " + hookedClass);
+                        logger.debugLog("HOOKED setText `" + label + "` in " + hookedClass);
                         incrementMethodDepth(depthKey);
                         callMethod(param.thisObject, "setColor", 1.0f, 1.0f, 0.0f, 1.0f);
                         decrementMethodDepth(depthKey);
@@ -503,7 +503,7 @@ public class Ingress extends DefaultAbstractApp {
                     if (hookedClass.equals(aju)) {
                         String label = getObjectField(param.thisObject, "ʾ").toString();
                         if (label.equals("5391fb18942c45e6b3f7a37e53f82fc9.c")) {
-                            logger.log("REPLACED setColorF for `" + label + "` " + hookedClass.toString());
+                            logger.debugLog("REPLACED setColorF for `" + label + "` " + hookedClass.toString());
                             incrementMethodDepth(depthKey);
                             callMethod(param.thisObject, "setColor", 1.0f, 0.0f, 0.0f, 1.0f);
                             decrementMethodDepth(depthKey);
@@ -514,7 +514,7 @@ public class Ingress extends DefaultAbstractApp {
                         }
 
                         if (label.equals("7bd4c796baf14b65a354f0ca2004e631.c")) {
-                            logger.log("REPLACED setColorF for `" + label + "` " + hookedClass.toString());
+                            logger.debugLog("REPLACED setColorF for `" + label + "` " + hookedClass.toString());
                             incrementMethodDepth(depthKey);
                             callMethod(param.thisObject, "setColor", 1.0f, 1.0f, 0.0f, 1.0f);
                             decrementMethodDepth(depthKey);
@@ -529,7 +529,7 @@ public class Ingress extends DefaultAbstractApp {
                     if (hookedClass.equals(akq)) {
                         String label = (String)getObjectField(param.thisObject, "ʿ");
                         if (label != null && (label.equals("5391fb18942c45e6b3f7a37e53f82fc9.c") || label.equals("alexbilevskiy"))) {
-                            logger.log("REPLACED setColorF for `" + label + "` " + hookedClass.toString());
+                            logger.debugLog("REPLACED setColorF for `" + label + "` " + hookedClass.toString());
                             incrementMethodDepth(depthKey);
                             callMethod(param.thisObject, "setColor", 1.0f, 0.0f, 0.0f, 1.0f);
                             decrementMethodDepth(depthKey);
@@ -539,7 +539,7 @@ public class Ingress extends DefaultAbstractApp {
                             return;
                         }
                         if (label != null && (label.equals("7bd4c796baf14b65a354f0ca2004e631.c") || label.equals("vl309"))) {
-                            logger.log("REPLACED setColorF for `" + label + "` " + hookedClass.toString());
+                            logger.debugLog("REPLACED setColorF for `" + label + "` " + hookedClass.toString());
                             incrementMethodDepth(depthKey);
                             callMethod(param.thisObject, "setColor", 1.0f, 1.0f, 0.0f, 1.0f);
                             decrementMethodDepth(depthKey);
