@@ -36,65 +36,20 @@ public class xposedtesting implements IXposedHookInitPackageResources, IXposedHo
             case ("com.nianticproject.ingress"):
                 prepareApp(lpparam, new Ingress());
                 break;
-            case ("com.mishiranu.dashchan"):
-                logger.log("Dashchan: @TODO");
-                break;
-            case ("com.microsoft.rdc.android"):
-                //prepareRdClient(lpparam);
             default:
                 break;
 
         }
     }
 
-    private void prepareRdClient(final XC_LoadPackage.LoadPackageParam lpparam) {
-        logger.log("Loaded " + lpparam.packageName);
-        findAndHookMethod(Application.class, "attach", Context.class, new XC_MethodHook() {
-            @Override
-            protected void afterHookedMethod(MethodHookParam param) {
-                final Class<?> b = findClass("com.microsoft.a3rdc.desktop.b", lpparam.classLoader);
-                findAndHookMethod(b, "a", Activity.class, new XC_MethodHook() {
-                    @Override
-                    protected void afterHookedMethod(MethodHookParam param) {
-                        try {
-                            Activity activity = (Activity) param.args[0];
-                            Rect size = new Rect();
-                            Rect prevSize = (Rect) param.getResult();
-                            activity.getWindowManager().getDefaultDisplay().getRectSize(size);
-                            if (activity.getWindowManager().getDefaultDisplay().getRotation() == Surface.ROTATION_0 ||
-                                    activity.getWindowManager().getDefaultDisplay().getRotation() == Surface.ROTATION_180) {
-                                size.left = 0;
-                                size.top = 0;
-                                size.right = 720;
-                                size.bottom = 1280;
-                            } else if (activity.getWindowManager().getDefaultDisplay().getRotation() == Surface.ROTATION_90 ||
-                                    activity.getWindowManager().getDefaultDisplay().getRotation() == Surface.ROTATION_270) {
-                                size.left = 0;
-                                size.top = 0;
-                                size.right = 1280;
-                                size.bottom = 720;
-                            }
-                            logger.log("Replace resolution " + prevSize.top + " " + prevSize.left + " " + prevSize.bottom + " " + prevSize.right + " WITH " + size.top + " " + size.left + " " + size.bottom + " " + size.right);
-                            param.setResult(size);
-                        } catch (Throwable e) {
-                            logger.log("RD exception" + e.getMessage());
-                        }
-                    }
-                });
-            }
-        });
-
-    }
-
-
     private void prepareApp(final XC_LoadPackage.LoadPackageParam lpparam, final DefaultAbstractApp hookerClass) {
         logger.log("Loaded " + lpparam.packageName);
         findAndHookMethod(Application.class, "attach", Context.class, new XC_MethodHook() {
             @Override
             protected void afterHookedMethod(MethodHookParam param) {
-                logger.log("Preparing " + hookerClass.getName());
+                logger.log("Preparing " + hookerClass.getClass().toString());
                 hookerClass.prepare(lpparam);
-                logger.log("Prepared " + hookerClass.getName());
+                logger.log("Prepared " + hookerClass.getClass().toString());
             }
         });
 

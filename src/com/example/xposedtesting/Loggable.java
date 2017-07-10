@@ -19,6 +19,6 @@ public class Loggable {
         if (!this.debug) {
             return;
         }
-        log("[DEBUG] " + msg);
+        log("xtst: [DEBUG] " + msg);
     }
 }
