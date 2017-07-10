@@ -4,6 +4,8 @@ import android.app.AndroidAppHelper;
 import android.content.Context;
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XSharedPreferences;
+import de.robv.android.xposed.XposedBridge;
+import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -17,6 +19,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.*;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.net.URI;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -30,6 +34,7 @@ public class Ingress extends DefaultAbstractApp {
     Loggable logger;
     XSharedPreferences pref;
     boolean debug;
+    static String depthKey = "xtst-depth";
 
     public String getName() {
         return "Ingress";
@@ -172,7 +177,7 @@ public class Ingress extends DefaultAbstractApp {
                             upY = getFloatField(up, "y");
                             upZ = getFloatField(up, "z");
                             logger.debugLog("PerspectiveCamera: SET up : x: " + upX.toString() + ", y: " + upY.toString() + ", z: " + upZ.toString());
-                    }
+                        }
                         if (pref.getBoolean("posEnabled", false)) {
                             setFloatField(position, "x", pref.getFloat("posX", 0f));
                             //camera height: can be changed by app
@@ -208,8 +213,25 @@ public class Ingress extends DefaultAbstractApp {
 
     private void hookIngressNet(final XC_LoadPackage.LoadPackageParam lpparam) {
 
+        final Class<?> AndroidNet = findClass("com.badlogic.gdx.backends.android.AndroidNet", lpparam.classLoader);
+        final Class<?> HttpRequest = findClass("com.badlogic.gdx.Net$HttpRequest", lpparam.classLoader);
+        final Class<?> HttpResponseListener = findClass("com.badlogic.gdx.Net$HttpResponseListener", lpparam.classLoader);
+        try {
+            findAndHookMethod(AndroidNet, "sendHttpRequest", HttpRequest, HttpResponseListener, new XC_MethodHook() {
+                @Override
+                protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                    Object url = new Object();
+                    getObjectField(url, "url");
+                    logger.log("sendHttpRequest " + url.toString());
+                }
+            });
+        } catch (Throwable e) {
+            logger.log("EXCEPTION in IngressNet: " + e.getMessage() + ", " + e.getClass().toString());
+        }
+
+
         final Class<?> s = findClass("o.u", lpparam.classLoader);
-        final Class<?> asj = findClass("o.ast", lpparam.classLoader);
+        final Class<?> asj = findClass("o.asu", lpparam.classLoader);
         try {
             //public static InputStream \u02ca(final URI uri, final ast ast, final String s)
             findAndHookMethod(s, "ˊ", URI.class, asj, String.class, new XC_MethodHook() {
@@ -254,7 +276,7 @@ public class Ingress extends DefaultAbstractApp {
                         file.println();
                         file.close();
                         if (!cookie.isEmpty() && !token.isEmpty()) {
-                            reportAuth(cookie, token);
+                            //reportAuth(cookie, token);
                         }
                     } catch (IOException e) {
                         logger.log("Failed writing to file: " + e.getMessage());
@@ -295,12 +317,11 @@ public class Ingress extends DefaultAbstractApp {
                                 JSONArray resultFiltered = new JSONArray();
                                 for (int i = 0; i < result.length(); i++) {
                                     JSONArray row = (JSONArray) result.get(i);
-                                    JSONObject val = (JSONObject)row.get(2);
+                                    JSONObject val = (JSONObject) row.get(2);
                                     String text = val.getJSONObject("plext").getString("text");
-                                    //logger.debugLog("Matching " + regex + " against " + text);
                                     Pattern pattern = Pattern.compile(regex, Pattern.DOTALL | Pattern.MULTILINE);
                                     if (pattern.matcher(text).find()) {
-                                        logger.log("COMM text filtered: " + text);
+                                        logger.debugLog("COMM text filtered: " + text);
                                         continue;
                                     }
                                     resultFiltered.put(row);
@@ -385,125 +406,11 @@ public class Ingress extends DefaultAbstractApp {
             logger.log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
         }
 
-//        final Class<?> ze = findClass("o.ze", lpparam.classLoader);
-//        final Class<?> zeif = findClass("o.ze$if", lpparam.classLoader);
-//        final Class<?> u1d2d = findClass("o.ᴭ", lpparam.classLoader);
-//        final Class<?> Color = findClass("com.badlogic.gdx.graphics.Color", lpparam.classLoader);
-//        try {
-//            //public if(final \u1d2d \u02ca, final Color \u02ce, final int \u02cf, final float \u141d, final float \u02bb, final float \u02bc, final float \u02bd)
-//            findAndHookConstructor(zeif, ze, u1d2d, Color, int.class, float.class, float.class, float.class, float.class, new XC_MethodHook() {
-//                @Override
-//                protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-//                    if (debug) {
-//                        pref.reload();
-//                    }
-//                    Object color = param.args[2];
-//                    float r, g, b, a;
-//                    r = getFloatField(color, "r");
-//                    g = getFloatField(color, "g");
-//                    b = getFloatField(color, "b");
-//                    a = getFloatField(color, "a");
-//                    logger.debugLog("color: r:" + r + ", g: " + g + ", b: " + b + ", a: " + a);
-//
-//                    if (pref.getBoolean("colorEnabled", false)) {
-//                        setFloatField(color, "r", pref.getFloat("colorR", 1.0f));
-//                        setFloatField(color, "g", pref.getFloat("colorG", 1.0f));
-//                        setFloatField(color, "b", pref.getFloat("colorB", 1.0f));
-//                        setFloatField(color, "a", pref.getFloat("colorA", 1.0f));
-//                    }
-//                }
-//            });
-//        } catch (Throwable e) {
-//            logger.log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
-//        }
-//        final Class<?> gameEntityBuilder = findClass("com.nianticproject.ingress.gameentity.GameEntityBuilder", lpparam.classLoader);
-//        final Class<?> mapGameEntity = findClass("com.nianticproject.ingress.gameentity.GameEntityBuilder$MapGameEntity", lpparam.classLoader);
-//        final Class<?> controllingTeam = findClass("com.nianticproject.ingress.gameentity.components.ControllingTeam", lpparam.classLoader);
-//        final Class<?> simpleTeam = findClass("com.nianticproject.ingress.gameentity.components.SimpleTeam", lpparam.classLoader);
-//        final Class<?> portal = findClass("com.nianticproject.ingress.gameentity.components.Portal", lpparam.classLoader);
-//        final Class<?> team = findClass("com.nianticproject.ingress.shared.Team", lpparam.classLoader);
-//        final Class<?> anp = findClass("o.anp", lpparam.classLoader);
-//
-//
-//        try {
-//            hookAllMethods(mapGameEntity, "getComponent", new XC_MethodHook() {
-//                @Override
-//                protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-//                    Object param0 = param.args[0];
-//                    if (param0.toString().equals("interface com.nianticproject.ingress.gameentity.components.ControllingTeam")) {
-//                        try {
-//                            String guid = (String) getObjectField(param.thisObject, "guid");
-//                            if (!Pattern.matches("[a-z0-9]{32}\\.[0-9]{1,2}", guid)) {
-//                                logger.debugLog("getComponent: guid not portal's: " + guid);
-//                                return;
-//                            }
-//                            StackTraceElement[] trace = Thread.currentThread().getStackTrace();
-//                            if (!trace[5].getClassName().equals("o.ze")) {
-//                                return;
-//                            }
-//                        } catch (Throwable e) {
-//                            logger.log("EXCEPTION in getComponent: " + e.getMessage() + ", " + e.getClass().toString());
-//                        }
-//                    }
-//                }
-//            });
-//            findAndHookMethod(team, "ˊ", String.class, new XC_MethodHook() {
-//                @Override
-//                protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-//                    logger.log("getComponent: team from string: "  + param.args[0]);
-//                }
-//            });
-//
-//            findAndHookMethod(simpleTeam, "getTeam", new XC_MethodHook() {
-//                @Override
-//                protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-//                    StackTraceElement[] trace = Thread.currentThread().getStackTrace();
-//                    if (!trace[5].getClass().toString().equals("o.ze")) {
-//                        return;
-//                    }
-//
-//                    Object result = param.getResult();
-//                    logger.log("getComponent: hooked getTeam, replacing " + getObjectField(result, "ˏ"));
-//                    Field teamField = simpleTeam.getDeclaredField("team");
-//                    teamField.setAccessible(true);
-//                    Class<Enum> enumType = (Class<Enum>) teamField.getType();
-//                    Object fakeTeam;
-//
-//                    try {
-//                        //fakeTeam = callStaticMethod(team, "ˊ", "ˋ");
-//                        //param.setResult(fakeTeam);
-//                    } catch (Throwable e) {
-//                        logger.log("EXCEPTION in getComponent team: " + e.getMessage() + ", " + e.getClass().toString());
-//                    }
-//                    //Enum enumValue = Enum.valueOf(enumType, enumType.getDeclaredFields()[1].getName());
-//                    //setObjectField(result, "ˏ", "ENLIGHTENED");
-//                }
-//            });
-//
-//        } catch (Throwable e) {
-//            logger.log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
-//        }
-//
-//
-//        final Class<?> portalInfoHudIf = findClass("com.nianticproject.ingress.common.ui.hud.PortalInfoHud$if", lpparam.classLoader);
-//        try {
-//            findAndHookMethod(portalInfoHudIf, "ˊ", String.class, new XC_MethodHook() {
-//                @Override
-//                protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-//                    String fullString = (String) param.args[0];
-//                    logger.log("portalInfoHud: string: " + fullString);
-//                    param.setResult(fullString);
-//                }
-//            });
-//        } catch (Throwable e) {
-//            logger.log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
-//        }
-
         //disable disabling immersive move when opening COMM
-        final Class<?> ave = findClass("o.avo", lpparam.classLoader);
+        final Class<?> avp = findClass("o.avp", lpparam.classLoader);
         try {
             //this.\u02cf.getWindow().getDecorView().setSystemUiVisibility(256);
-            findAndHookMethod(ave, "ʼ", new XC_MethodHook() {
+            findAndHookMethod(avp, "ʼ", new XC_MethodHook() {
                 @Override
                 protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                     param.setResult(null);
@@ -514,10 +421,10 @@ public class Ingress extends DefaultAbstractApp {
         }
 
         //do not wrap "uncaptured" to "unca..."
-        final Class<?> ajk = findClass("o.aju", lpparam.classLoader);
         try {
+            final Class<?> aju = findClass("o.aju", lpparam.classLoader);
             //    private String \u02ca(final String s, final int n) {
-            findAndHookMethod(ajk, "ˊ", String.class, int.class, new XC_MethodHook() {
+            findAndHookMethod(aju, "ˊ", String.class, int.class, new XC_MethodHook() {
                 @Override
                 protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                     if (param.args[0].equals("uncaptured")) {
@@ -529,6 +436,286 @@ public class Ingress extends DefaultAbstractApp {
         } catch (Throwable e) {
             logger.log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
         }
+
+        try {
+            final Class<?> aju = findClass("o.aju", lpparam.classLoader);
+            final Class<?> akq = findClass("o.akq", lpparam.classLoader);
+            final Class<?> NativeLabelStyle = findClass("com.nianticproject.ingress.common.ui.widget.NativeLabel$NativeLabelStyle", lpparam.classLoader);
+            final Class<?> NativeLabel = findClass("com.nianticproject.ingress.common.ui.widget.NativeLabel", lpparam.classLoader);
+            final Class<?> fd = findClass("o.fd", lpparam.classLoader);
+            final Class<?> Color = findClass("com.badlogic.gdx.graphics.Color", lpparam.classLoader);
+            final Class<?> Actor = findClass("com.badlogic.gdx.scenes.scene2d.Actor", lpparam.classLoader);
+            final Class<?> Table = findClass("com.badlogic.gdx.scenes.scene2d.ui.Table", lpparam.classLoader);
+            final Class<?> Image = findClass("com.badlogic.gdx.scenes.scene2d.ui.Image", lpparam.classLoader);
+            final Class<?> Team = findClass("com.nianticproject.ingress.shared.Team", lpparam.classLoader);
+            final Class<?> ajt = findClass("o.ajt", lpparam.classLoader);
+
+            findAndHookMethod(aju, "ˊ", String.class, new XC_MethodHook() {
+                @Override
+                protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                    String hookedClass = param.thisObject.getClass().toString();
+                    String label = param.args[0].toString();
+                    if (label.equals("alexbilevskiy")) {
+                        logger.log("HOOKED setText `" + label + "` in " + hookedClass);
+                        incrementMethodDepth(depthKey);
+                        callMethod(param.thisObject, "setColor", 1.0f, 0.0f, 0.0f, 1.0f);
+                        decrementMethodDepth(depthKey);
+
+                        return;
+                    }
+                    if (label.equals("vl309")) {
+                        logger.log("HOOKED setText `" + label + "` in " + hookedClass);
+                        incrementMethodDepth(depthKey);
+                        callMethod(param.thisObject, "setColor", 1.0f, 1.0f, 0.0f, 1.0f);
+                        decrementMethodDepth(depthKey);
+
+                        return;
+                    }
+                }
+            });
+
+
+            //hookAllMethods(aju);
+
+
+//            findAndHookMethod(Actor, "setColor", Color, new XC_MethodHook() {
+//                @Override
+//                protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+//                    if (getMethodDepth(depthKey) > 1) {
+//                        return;
+//                    }
+//                    Class<?> hookedClass = param.thisObject.getClass();
+//                    if (hookedClass.equals(Table) || hookedClass.equals(Image) || hookedClass.equals(ajt) || hookedClass.equals(NativeLabel)) {
+//                        return;
+//                    }
+//                    if (hookedClass.equals(aju)) {
+//                        String label = getObjectField(param.thisObject, "ʾ").toString();
+//                        if (label.equals("5391fb18942c45e6b3f7a37e53f82fc9.c")) {
+//                            logger.log("REPLACED setColor for `" + label + "` " + hookedClass.toString());
+//                            incrementMethodDepth(depthKey);
+//                            callMethod(param.thisObject, "setColor", 1.0f, 0.0f, 0.0f, 1.0f);
+//                            decrementMethodDepth(depthKey);
+//
+//                            param.setResult(null);
+//                        } else {
+//                            logger.log("hooked setColor for `" + label + "` " + hookedClass.toString());
+//                        }
+//                    }
+//                    if (hookedClass.equals(akq)) {
+//                        String label = (String)getObjectField(param.thisObject, "ʿ");
+//                        if (label != null && (label.equals("5391fb18942c45e6b3f7a37e53f82fc9.c") || label.equals("alexbilevskiy"))) {
+//                            logger.log("REPLACED setColor for `" + label + "` " + hookedClass.toString());
+//                            incrementMethodDepth(depthKey);
+//                            callMethod(param.thisObject, "setColor", 1.0f, 0.0f, 0.0f, 1.0f);
+//                            decrementMethodDepth(depthKey);
+//
+//                            param.setResult(null);
+//                        } else {
+//                            logger.log("hooked setColor for `" + label + "` " + hookedClass.toString());
+//                        }
+//                    }
+//                }
+//            });
+
+            findAndHookMethod(Actor, "setColor", float.class, float.class, float.class, float.class, new XC_MethodHook() {
+                @Override
+                protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                    if (getMethodDepth(depthKey) > 0) {
+                        return;
+                    }
+                    Class<?> hookedClass = param.thisObject.getClass();
+                    if (hookedClass.equals(Table) || hookedClass.equals(Image) || hookedClass.equals(ajt)) {
+                        return;
+                    }
+                    if (hookedClass.equals(aju)) {
+                        String label = getObjectField(param.thisObject, "ʾ").toString();
+                        if (label.equals("5391fb18942c45e6b3f7a37e53f82fc9.c")) {
+                            logger.log("REPLACED setColorF for `" + label + "` " + hookedClass.toString());
+                            incrementMethodDepth(depthKey);
+                            callMethod(param.thisObject, "setColor", 1.0f, 0.0f, 0.0f, 1.0f);
+                            decrementMethodDepth(depthKey);
+
+                            param.setResult(null);
+
+                            return;
+                        }
+
+                        if (label.equals("7bd4c796baf14b65a354f0ca2004e631.c")) {
+                            logger.log("REPLACED setColorF for `" + label + "` " + hookedClass.toString());
+                            incrementMethodDepth(depthKey);
+                            callMethod(param.thisObject, "setColor", 1.0f, 1.0f, 0.0f, 1.0f);
+                            decrementMethodDepth(depthKey);
+
+                            param.setResult(null);
+
+                            return;
+                        }
+
+                        return;
+                    }
+                    if (hookedClass.equals(akq)) {
+                        String label = (String)getObjectField(param.thisObject, "ʿ");
+                        if (label != null && (label.equals("5391fb18942c45e6b3f7a37e53f82fc9.c") || label.equals("alexbilevskiy"))) {
+                            logger.log("REPLACED setColorF for `" + label + "` " + hookedClass.toString());
+                            incrementMethodDepth(depthKey);
+                            callMethod(param.thisObject, "setColor", 1.0f, 0.0f, 0.0f, 1.0f);
+                            decrementMethodDepth(depthKey);
+
+                            param.setResult(null);
+
+                            return;
+                        }
+                        if (label != null && (label.equals("7bd4c796baf14b65a354f0ca2004e631.c") || label.equals("vl309"))) {
+                            logger.log("REPLACED setColorF for `" + label + "` " + hookedClass.toString());
+                            incrementMethodDepth(depthKey);
+                            callMethod(param.thisObject, "setColor", 1.0f, 1.0f, 0.0f, 1.0f);
+                            decrementMethodDepth(depthKey);
+
+                            param.setResult(null);
+
+                            return;
+                        }
+
+                        return;
+                    }
+
+                    if (hookedClass.equals(NativeLabel)) {
+                        //String label = getObjectField(param.thisObject, "ᐝ").toString();
+                        //logger.log("hooked setColorF for `" + label + "` " + hookedClass.toString());
+
+                        return;
+                    }
+                    //logger.log("NOT-HOOKED setColorF for `" + hookedClass.toString() + "`");
+                }
+            });
+
+
+        } catch (Throwable e) {
+            logger.log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
+        }
+    }
+
+    private void hookAllMethods(Class<?> clazz) {
+        String clazzName = clazz.toString();
+        logger.log("Preparing hooks for " + clazzName);
+        for (Method m : clazz.getMethods()) {
+            String methodName = m.getName();
+            Class<?>[] types = getParameterTypes(m);
+            Class<?> declaringClass = m.getDeclaringClass();
+            if (declaringClass.equals(Object.class)) {
+
+                continue;
+            }
+            try {
+                logger.log("[H] would hook method `" + m.getName() + "` of " + declaringClass.toString());
+                XposedBridge.hookMethod(m, new XC_MethodHook() {
+                    @Override
+                    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                        String thisClass = param.thisObject.getClass().toString();
+                        String methodName = param.method.getName();
+                        if (param.args == null) {
+                            logger.log("[M] " + thisClass + ", method: `" + methodName + "`, arguments (0)");
+
+                            return;
+                        }
+                        logger.log("[M] " + thisClass + ", method: `" + methodName + "`, arguments (" + param.args.length + ")");
+                    }
+                });
+/*
+switch (types.length) {
+                    case 0:
+                        findAndHookMethod(declaringClass, methodName, new XC_MethodHook() {
+                            @Override
+                            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                                String hookedClass = param.thisObject.getClass().toString();
+                                String methodName = param.method.getName();
+                                String argClasses = "";
+                                for (Object argClass : param.args) {
+                                    argClasses += argClass.toString() + " ";
+                                }
+                                logger.log("[M:0] `" + hookedClass + "`, method: `" + methodName + "`, arguments: `" + argClasses + "`");
+                            }
+                        });
+                        break;
+                    case 1:
+                        findAndHookMethod(declaringClass, methodName, types[0], new XC_MethodHook() {
+                            @Override
+                            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                                String hookedClass = param.thisObject.getClass().toString();
+                                String methodName = param.method.getName();
+                                String argClasses = "";
+                                for (Object argClass : param.args) {
+                                    argClasses += argClass.toString() + " ";
+                                }
+                                logger.log("[M:1] `" + hookedClass + "`, method: `" + methodName + "`, arguments: `" + argClasses + "`");
+                            }
+                        });
+                        break;
+                    case 2:
+                        findAndHookMethod(declaringClass, methodName, types[0], types[1], new XC_MethodHook() {
+                            @Override
+                            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                                String hookedClass = param.thisObject.getClass().toString();
+                                String methodName = param.method.getName();
+                                String argClasses = "";
+                                for (Object argClass : param.args) {
+                                    argClasses += argClass.toString() + " ";
+                                }
+                                logger.log("[M:2] `" + hookedClass + "`, method: `" + methodName + "`, arguments: `" + argClasses + "`");
+                            }
+                        });
+                        break;
+                    case 3:
+                        findAndHookMethod(declaringClass, methodName, types[0], types[1], types[2], new XC_MethodHook() {
+                            @Override
+                            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                                String hookedClass = param.thisObject.getClass().toString();
+                                String methodName = param.method.getName();
+                                String argClasses = "";
+                                for (Object argClass : param.args) {
+                                    argClasses += argClass.toString() + " ";
+                                }
+                                logger.log("[M:3] `" + hookedClass + "`, method: `" + methodName + "`, arguments: `" + argClasses + "`");
+                            }
+                        });
+                        break;
+                    case 4:
+                        findAndHookMethod(declaringClass, methodName, types[0], types[1], types[2], types[3], new XC_MethodHook() {
+                            @Override
+                            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                                String hookedClass = param.thisObject.getClass().toString();
+                                String methodName = param.method.getName();
+                                String argClasses = "";
+                                for (Object argClass : param.args) {
+                                    argClasses += argClass.toString() + " ";
+                                }
+                                logger.log("[M:4] `" + hookedClass + "`, method: `" + methodName + "`, arguments: `" + argClasses + "`");
+                            }
+                        });
+                        break;
+                    case 5:
+                        findAndHookMethod(declaringClass, methodName, types[0], types[1], types[2], types[3], types[4], new XC_MethodHook() {
+                            @Override
+                            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                                String hookedClass = param.thisObject.getClass().toString();
+                                String methodName = param.method.getName();
+                                String argClasses = "";
+                                for (Object argClass : param.args) {
+                                    argClasses += argClass.toString() + " ";
+                                }
+                                logger.log("[M:5] `" + hookedClass + "`, method: `" + methodName + "`, arguments: `" + argClasses + "`");
+                            }
+                        });
+                        break;
+                    default:
+                        logger.log("Not hooked method `" + methodName + "` for `" + clazzName + "`");
+                }
+*/
+            } catch (Throwable e) {
+                logger.log("Faied hookig method " + methodName + " for " + clazzName + ": " + e.getMessage());
+            }
+        }
+
     }
 
     private void reportAuth(String cookie, String token) throws UnsupportedEncodingException, JSONException {
@@ -558,5 +745,11 @@ public class Ingress extends DefaultAbstractApp {
         }
         cachedCookie = cookie;
         cachedToken = token;
+    }
+
+    private void printStackTrace() {
+        for (StackTraceElement ste : new Throwable().getStackTrace()) {
+            logger.log("[TRACE] " + ste);
+        }
     }
 }
