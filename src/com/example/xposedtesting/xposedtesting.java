@@ -14,6 +14,8 @@ import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.callbacks.XC_InitPackageResources.InitPackageResourcesParam;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
+import java.lang.reflect.Method;
+
 import static de.robv.android.xposed.XposedHelpers.findAndHookMethod;
 import static de.robv.android.xposed.XposedHelpers.findClass;
 
@@ -33,12 +35,21 @@ public class xposedtesting implements IXposedHookInitPackageResources, IXposedHo
 
     public void handleLoadPackage(final XC_LoadPackage.LoadPackageParam lpparam) throws Throwable {
         switch (lpparam.packageName) {
-            case ("com.nianticproject.ingress"):
+            case "com.nianticproject.ingress":
                 prepareApp(lpparam, new Ingress());
+                break;
+            case "com.instagram.android":
+//                logger.log("Unpinning INSTAGRAM");
+//                findAndHookMethod(Application.class, "attach", Context.class, new XC_MethodHook() {
+//                    @Override
+//                    protected void afterHookedMethod(MethodHookParam param) {
+//                        DefaultAbstractApp.unpinSsl(lpparam);
+//                    }
+//                });
+//                logger.log("Unpinned INSTAGRAM");
                 break;
             default:
                 break;
-
         }
     }
 
