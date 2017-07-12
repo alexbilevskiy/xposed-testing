@@ -2,6 +2,9 @@ package com.example.xposedtesting;
 
 import android.app.AndroidAppHelper;
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
+import android.widget.Toast;
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XSharedPreferences;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
@@ -195,25 +198,8 @@ public class Ingress extends DefaultAbstractApp {
 
     private void hookIngressNet(final XC_LoadPackage.LoadPackageParam lpparam) {
 
-        final Class<?> AndroidNet = findClass("com.badlogic.gdx.backends.android.AndroidNet", lpparam.classLoader);
-        final Class<?> HttpRequest = findClass("com.badlogic.gdx.Net$HttpRequest", lpparam.classLoader);
-        final Class<?> HttpResponseListener = findClass("com.badlogic.gdx.Net$HttpResponseListener", lpparam.classLoader);
-        try {
-            findAndHookMethod(AndroidNet, "sendHttpRequest", HttpRequest, HttpResponseListener, new XC_MethodHook() {
-                @Override
-                protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                    Object url = new Object();
-                    getObjectField(url, "url");
-                    logger.log("sendHttpRequest " + url.toString());
-                }
-            });
-        } catch (Throwable e) {
-            logger.log("EXCEPTION in IngressNet: " + e.getMessage() + ", " + e.getClass().toString());
-        }
-
-        hookAllMethods(findClass("o.u", lpparam.classLoader));
-        hookAllMethods(findClass("o.up", lpparam.classLoader));
-        hookAllMethods(findClass("o.atp", lpparam.classLoader));
+//        hookAllMethods(findClass("o.u", lpparam.classLoader));
+//        hookAllMethods(findClass("o.up", lpparam.classLoader));
 
         final Class<?> u = findClass("o.u", lpparam.classLoader);
         final Class<?> asu = findClass("o.asu", lpparam.classLoader);
@@ -283,6 +269,7 @@ public class Ingress extends DefaultAbstractApp {
                 protected void afterHookedMethod(MethodHookParam param) throws IOException {
                     String regex = pref.getString("commFilter", "");
                     URI uri = (URI) param.args[1];
+                    String uriString = uri.toString();
                     Integer httpCode = (Integer) param.args[2];
                     Map<String, List<String>> map = (Map) param.args[3];
                     String type = (String) param.args[5];
@@ -295,7 +282,7 @@ public class Ingress extends DefaultAbstractApp {
                             inputData.write(buffer, 0, length);
                         }
                         byte[] inputDataBytes = inputData.toByteArray();
-                        if (uri.toString().equals("https://m-dot-betaspike.appspot.com/rpc/gameplay/getPaginatedPlexts")) {
+                        if (uriString.equals("https://m-dot-betaspike.appspot.com/rpc/gameplay/getPaginatedPlexts")) {
                             try {
                                 JSONObject json = new JSONObject(inputData.toString());
                                 JSONArray result = json.getJSONArray("result");
@@ -316,20 +303,38 @@ public class Ingress extends DefaultAbstractApp {
                             } catch (Throwable e) {
                                 logger.log("JSON EXCEPTION " + e.getMessage());
                             }
+                        } else if (uriString.equals("https://m-dot-betaspike.appspot.com/rpc/gameplay/collectItemsFromPortalWithGlyphResponse")) {
+                            try {
+                                JSONObject json = new JSONObject(inputData.toString());
+                                JSONArray displayNames = json.getJSONObject("result").getJSONObject("glyphResponse").getJSONArray("displayNames");
+                                String names = "";
+                                for (int i=0; i < displayNames.length(); i++) {
+                                    names += displayNames.get(i) + "\n";
+                                }
 
+                                final String finalNames = names;
+                                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Toast.makeText(AndroidAppHelper.currentApplication(), finalNames.trim(), Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+
+                            } catch (Throwable e) {
+                                logger.log("JSON EXCEPTION " + e.getMessage());
+                            }
                         }
-
 
                         BufferedInputStream fakeIs = new BufferedInputStream(new ByteArrayInputStream(inputDataBytes));
                         param.setResult(fakeIs);
                     } else {
                         logger.debugLog("s: input stream: NOT GZIP! " + param.getResult().getClass().toString());
                     }
-                    logger.debugLog("s: resp.uri: " + uri.toString() + ", resp.code: " + httpCode.toString() + ", type: " + type + ", size: " + inputData.size());
+                    logger.debugLog("s: resp.uri: " + uriString + ", resp.code: " + httpCode.toString() + ", type: " + type + ", size: " + inputData.size());
 
                     try {
                         PrintWriter file = new PrintWriter(new BufferedWriter(new FileWriter("/sdcard/ingress/response.dat", true)));
-                        file.println(uri.toString());
+                        file.println(uriString);
                         for (Map.Entry<String, List<String>> entry : map.entrySet()) {
                             for (String oneString : entry.getValue()) {
                                 if (entry.getKey() == null) {

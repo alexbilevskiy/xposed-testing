@@ -64,6 +64,41 @@ public abstract class DefaultAbstractApp {
                 continue;
             }
             try {
+                logger.log("[H] would hook constructors of " + declaringClass.toString());
+                XposedBridge.hookAllConstructors(clazz, new XC_MethodHook() {
+                    @Override
+                    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                        String thisClass;
+                        if (param.thisObject == null) {
+
+                            thisClass = "STATIC " + param.method.getDeclaringClass().toString();
+                        } else {
+                            thisClass = param.thisObject.getClass().toString();
+                        }
+                        String methodName = param.method.getName();
+                        if (param.args == null) {
+                            logger.log("[C] " + thisClass + ", method: `" + methodName + "`, arguments (0)");
+
+                            return;
+                        }
+                        String params = "[";
+                        for (Object arg :
+                                param.args) {
+                            if(arg == null) {
+                                params += " null |";
+
+                                continue;
+                            }
+                            params += " " + arg.getClass().toString() + " `" + arg.toString() + "` |";
+                        }
+                        params = params.substring(0, params.length() - 1) + "]";
+                        logger.log("[C] " + thisClass + ", method: `" + methodName + "`, arguments (" + param.args.length + ") " + params);
+                    }
+                });
+            } catch (Throwable e) {
+                logger.log("Faied hookig constructors for " + clazzName + ": " + e.getMessage());
+            }
+            try {
                 logger.log("[H] would hook method `" + m.getName() + "` of " + declaringClass.toString());
                 XposedBridge.hookMethod(m, new XC_MethodHook() {
                     @Override
@@ -91,7 +126,7 @@ public abstract class DefaultAbstractApp {
                             }
                             params += " " + arg.getClass().toString() + " |";
                         }
-                        params = params.substring(0, params.length() - 2) + "]";
+                        params = params.substring(0, params.length() - 1) + "]";
                         logger.log("[M] " + thisClass + ", method: `" + methodName + "`, arguments (" + param.args.length + ") " + params);
                     }
                 });
