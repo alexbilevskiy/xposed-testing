@@ -307,9 +307,14 @@ public class Ingress extends DefaultAbstractApp {
                             try {
                                 JSONObject json = new JSONObject(inputData.toString());
                                 JSONArray displayNames = json.getJSONObject("result").getJSONObject("glyphResponse").getJSONArray("displayNames");
+                                JSONArray glyphResponses = json.getJSONObject("result").getJSONObject("glyphResponse").getJSONArray("glyphResponses");
                                 String names = "";
                                 for (int i=0; i < displayNames.length(); i++) {
-                                    names += displayNames.get(i) + "\n";
+                                    if ((Boolean) glyphResponses.get(i)) {
+                                        names += "+ " + displayNames.get(i) + "\n";
+                                    } else {
+                                        names += "- " + displayNames.get(i) + "\n";
+                                    }
                                 }
 
                                 final String finalNames = names;
