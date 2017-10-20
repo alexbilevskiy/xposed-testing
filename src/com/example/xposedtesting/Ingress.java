@@ -2,8 +2,11 @@ package com.example.xposedtesting;
 
 import android.app.AndroidAppHelper;
 import android.content.Context;
+import android.graphics.Typeface;
 import android.os.Handler;
 import android.os.Looper;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XSharedPreferences;
@@ -202,7 +205,7 @@ public class Ingress extends DefaultAbstractApp {
 //        hookAllMethods(findClass("o.up", lpparam.classLoader));
 
         final Class<?> u = findClass("o.u", lpparam.classLoader);
-        final Class<?> asu = findClass("o.asu", lpparam.classLoader);
+        final Class<?> asu = findClass("o.asv", lpparam.classLoader);
         try {
             //public static InputStream \u02ca(final URI uri, final asu asu, final String s)
             findAndHookMethod(u, "ˊ", URI.class, asu, String.class, new XC_MethodHook() {
@@ -257,7 +260,7 @@ public class Ingress extends DefaultAbstractApp {
         } catch (Throwable e) {
             logger.log("EXCEPTION in IngressNet: " + e.getMessage() + ", " + e.getClass().toString());
         }
-        final Class<?> aln = findClass("o.alx", lpparam.classLoader);
+        final Class<?> aln = findClass("o.aly", lpparam.classLoader);
         try {
             //public static InputStream \u02ca(final alx alx, final URI uri, final int n, final Map<String, List<String>> map, final InputStream inputStream, final String s)
             findAndHookMethod(u, "ˊ", aln, URI.class, int.class, Map.class, InputStream.class, String.class, new XC_MethodHook() {
@@ -321,7 +324,7 @@ public class Ingress extends DefaultAbstractApp {
                                 new Handler(Looper.getMainLooper()).post(new Runnable() {
                                     @Override
                                     public void run() {
-                                        Toast.makeText(AndroidAppHelper.currentApplication(), finalNames.trim(), Toast.LENGTH_SHORT).show();
+                                        Toast.makeText(AndroidAppHelper.currentApplication(), finalNames.trim(), Toast.LENGTH_LONG).show();
                                     }
                                 });
 
@@ -363,18 +366,18 @@ public class Ingress extends DefaultAbstractApp {
             logger.log("EXCEPTION in IngressNet: " + e.getMessage() + ", " + e.getClass().toString());
         }
 
-        final Class<?> up = findClass("o.up", lpparam.classLoader);
-        final Class<?> tp = findClass("o.tp", lpparam.classLoader);
-        try {
-            findAndHookConstructor(up, tp, String.class, new XC_MethodHook() {
-                @Override
-                protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                    logger.debugLog("up: construct: `" + param.args[0].toString() + "`, `" + param.args[1].toString() + "`");
-                }
-            });
-        } catch (Throwable e) {
-            logger.log("EXCEPTION in IngressNet: " + e.getMessage() + ", " + e.getClass().toString());
-        }
+//        final Class<?> up = findClass("o.up", lpparam.classLoader);
+//        final Class<?> tp = findClass("o.tp", lpparam.classLoader);
+//        try {
+//            findAndHookConstructor(up, tp, String.class, new XC_MethodHook() {
+//                @Override
+//                protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+//                    logger.debugLog("up: construct: `" + param.args[0].toString() + "`, `" + param.args[1].toString() + "`");
+//                }
+//            });
+//        } catch (Throwable e) {
+//            logger.log("EXCEPTION in IngressNet: " + e.getMessage() + ", " + e.getClass().toString());
+//        }
     }
 
     private void hookIngressScanner(final XC_LoadPackage.LoadPackageParam lpparam) {
@@ -400,7 +403,7 @@ public class Ingress extends DefaultAbstractApp {
         }
 
         //disable disabling immersive move when opening COMM
-        final Class<?> avp = findClass("o.avp", lpparam.classLoader);
+        final Class<?> avp = findClass("o.avq", lpparam.classLoader);
         try {
             //this.\u02cf.getWindow().getDecorView().setSystemUiVisibility(256);
             findAndHookMethod(avp, "ʼ", new XC_MethodHook() {
@@ -415,7 +418,7 @@ public class Ingress extends DefaultAbstractApp {
 
         //do not wrap "uncaptured" to "unca..."
         try {
-            final Class<?> aju = findClass("o.aju", lpparam.classLoader);
+            final Class<?> aju = findClass("o.ajv", lpparam.classLoader);
             //    private String \u02ca(final String s, final int n) {
             findAndHookMethod(aju, "ˊ", String.class, int.class, new XC_MethodHook() {
                 @Override
@@ -431,17 +434,17 @@ public class Ingress extends DefaultAbstractApp {
         }
 
         try {
-            final Class<?> aju = findClass("o.aju", lpparam.classLoader);
-            final Class<?> akq = findClass("o.akq", lpparam.classLoader);
+            final Class<?> aju = findClass("o.ajv", lpparam.classLoader);
+            final Class<?> akq = findClass("o.akr", lpparam.classLoader);
             final Class<?> NativeLabelStyle = findClass("com.nianticproject.ingress.common.ui.widget.NativeLabel$NativeLabelStyle", lpparam.classLoader);
             final Class<?> NativeLabel = findClass("com.nianticproject.ingress.common.ui.widget.NativeLabel", lpparam.classLoader);
-            final Class<?> fd = findClass("o.fd", lpparam.classLoader);
+            final Class<?> fd = findClass("o.fe", lpparam.classLoader);
             final Class<?> Color = findClass("com.badlogic.gdx.graphics.Color", lpparam.classLoader);
             final Class<?> Actor = findClass("com.badlogic.gdx.scenes.scene2d.Actor", lpparam.classLoader);
             final Class<?> Table = findClass("com.badlogic.gdx.scenes.scene2d.ui.Table", lpparam.classLoader);
             final Class<?> Image = findClass("com.badlogic.gdx.scenes.scene2d.ui.Image", lpparam.classLoader);
             final Class<?> Team = findClass("com.nianticproject.ingress.shared.Team", lpparam.classLoader);
-            final Class<?> ajt = findClass("o.ajt", lpparam.classLoader);
+            final Class<?> ajt = findClass("o.aju", lpparam.classLoader);
 
             findAndHookMethod(aju, "ˊ", String.class, new XC_MethodHook() {
                 @Override
