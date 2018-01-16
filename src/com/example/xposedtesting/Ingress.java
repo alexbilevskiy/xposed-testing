@@ -5,6 +5,7 @@ import android.content.Context;
 import android.graphics.Typeface;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Base64;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -33,11 +34,14 @@ import static de.robv.android.xposed.XposedHelpers.*;
 
 public class Ingress extends DefaultAbstractApp {
 
+    private static boolean loaded;
+
     public void prepare(final XC_LoadPackage.LoadPackageParam lpparam) {
         if (!pref.getBoolean("enabled", false)) {
             logger.log("Ingress: disabled, not hooking...");
             return;
         }
+        loaded = false;
 
         logger.log("Preparing Ingress: hookBadlogicCameraView");
         hookBadlogicCameraView(lpparam);
@@ -205,7 +209,7 @@ public class Ingress extends DefaultAbstractApp {
 //        hookAllMethods(findClass("o.up", lpparam.classLoader));
 
         final Class<?> u = findClass("o.u", lpparam.classLoader);
-        final Class<?> asu = findClass("o.asv", lpparam.classLoader);
+        final Class<?> asu = findClass("o.asw", lpparam.classLoader);
         try {
             //public static InputStream \u02ca(final URI uri, final asu asu, final String s)
             findAndHookMethod(u, "ˊ", URI.class, asu, String.class, new XC_MethodHook() {
@@ -260,7 +264,7 @@ public class Ingress extends DefaultAbstractApp {
         } catch (Throwable e) {
             logger.log("EXCEPTION in IngressNet: " + e.getMessage() + ", " + e.getClass().toString());
         }
-        final Class<?> aln = findClass("o.aly", lpparam.classLoader);
+        final Class<?> aln = findClass("o.ama", lpparam.classLoader);
         try {
             //public static InputStream \u02ca(final alx alx, final URI uri, final int n, final Map<String, List<String>> map, final InputStream inputStream, final String s)
             findAndHookMethod(u, "ˊ", aln, URI.class, int.class, Map.class, InputStream.class, String.class, new XC_MethodHook() {
@@ -383,6 +387,206 @@ public class Ingress extends DefaultAbstractApp {
     private void hookIngressScanner(final XC_LoadPackage.LoadPackageParam lpparam) {
         final XSharedPreferences pref = new XSharedPreferences("com.example.xposedtesting", "user_settings");
 
+        try {
+            try {
+                findAndHookMethod(ClassLoader.class, "loadClass", String.class, new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                        String className = param.args[0].toString();
+                        if (!loaded) {
+                            if (!className.equals("o.tw")) {
+                                return;
+                            }
+                            Class paramClass = (Class)param.getResult();
+                            try {
+                                //final Class<?> tu = findClass("o.tu", lpparam.classLoader);
+                                final Class<?> GameplayRpcParams = findClass("com.nianticproject.ingress.shared.rpc.GameplayRpcParams", lpparam.classLoader);
+                                try {
+                                    findAndHookMethod(paramClass, "ˊ", GameplayRpcParams, boolean.class, boolean.class, long.class, new XC_MethodHook() {
+                                        @Override
+                                        protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                                            logger.debugLog("blob check before call: " + param.args[0].getClass() + ", " + param.args[1].toString() + ", " + param.args[2].toString() + ", " + param.args[3].toString());
+                                        }
+                                        @Override
+                                        protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                                            Object clientBlob = callMethod(param.args[0], "ˊ");
+                                            logger.debugLog("blob check after call: " + clientBlob.toString());
+                                        }
+                                    });
+                                    logger.log("dynamic class tu hooked successfully!!!");
+                                    loaded = true;
+                                } catch (Throwable e) {
+                                    logger.log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
+                                }
+                            } catch (Throwable e) {
+                                logger.log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
+                            }
+                        }
+                    }
+                });
+            } catch (Throwable e) {
+                logger.log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
+            }
+        } catch (Throwable e) {
+            logger.log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
+        }
+
+
+        try {
+            final Class<?> ac = findClass("o.ac", lpparam.classLoader);
+            try {
+                findAndHookMethod(ac, "ˊ", int.class, boolean.class, long.class, int.class, new XC_MethodHook() {
+                    @Override
+                    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                        logger.debugLog("blob generate: params: " + param.args[0].toString() + ", " + param.args[1].toString() + ", " + param.args[2].toString() + ", " + param.args[3].toString());
+                    }
+
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                        String bytesString;
+                        if (param.getResult() == null) {
+                             bytesString = "NULL";
+                        } else {
+                            bytesString = (String)param.getResult();
+                        }
+                        logger.debugLog("blob generate: result: " + "(bytes)" + ", length: " + bytesString.length() + ", data: " + bytesString);
+                    }
+                });
+            } catch (Throwable e) {
+                logger.log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
+            }
+        }catch (Throwable e) {
+            logger.log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
+        }
+
+
+        try {
+//            final Class<?> aqw = findClass("o.aqw", lpparam.classLoader);
+//            final Class<?> ac = findClass("o.ac", lpparam.classLoader);
+            final Class<?> Native = findClass("com.nianticproject.ingress.common.utility.Native", lpparam.classLoader);
+
+            try {
+                findAndHookMethod(Native, "r", long.class, byte[].class, int.class, long.class, new XC_MethodHook() {
+                    @Override
+                    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                        byte[] bytes = (byte[]) param.args[1];
+                        String bytesString = Base64.encodeToString(bytes, Base64.NO_WRAP);
+
+                        logger.debugLog("blob generate: native params: " + param.args[0].toString() + ", " + "(bytes)" + ", " + param.args[2].toString() + ", " + param.args[3].toString() + ", bytes length: " + bytes.length + "/" + bytesString.length() + ", data: " + bytesString);
+                    }
+//                    @Override
+//                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+//                        byte[] bytes = (byte[]) param.getResult();
+//                        String bytesString = Base64.encodeToString(bytes, Base64.NO_WRAP);
+//                        logger.log("blob generate: native result: " + "(bytes)" + ", length: " + bytes.length + "/" + bytesString.length() + ", data: " + bytesString);
+//                    }
+                });
+            } catch (Throwable e) {
+                logger.log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
+            }
+
+        }catch (Throwable e) {
+            logger.log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
+        }
+
+
+
+
+
+//just their own base64 converter
+/*
+        try {
+            findAndHookMethod(aqw, "ˋ", byte[].class, new XC_MethodHook() {
+                @Override
+                protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                    byte[] bytes = (byte[]) param.args[0];
+                    String bytesString = Base64.encodeToString(bytes, Base64.NO_WRAP);
+                    logger.log("blob base64 args: " + bytesString + ", length: " + bytes.length + "/" + bytesString.length());
+                }
+                @Override
+                protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                    String result = (String)param.getResult();
+                    logger.log("blob base64 result: " + result + ", length: " + result.length());
+                }
+            });
+        } catch (Throwable e) {
+            logger.log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
+        }
+
+*/
+
+//returns com.nianticproject.ingress.common.utility.Native
+/*
+        try {
+            findAndHookMethod(ac, "ˊ", byte.class, byte.class, byte.class, new XC_MethodHook() {
+                @Override
+                protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                    byte byte0 = (byte)param.args[0];
+                    byte byte1 = (byte)param.args[1];
+                    byte byte2 = (byte)param.args[2];
+                    logger.log("blob base64 reflection before call: " + Integer.toHexString(byte0) + " "  + Integer.toHexString(byte1) + " " + Integer.toHexString(byte2));
+                }
+                @Override
+                protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                    logger.log("blob base64 reflection after call: " + param.getResult());
+                }
+            });
+        } catch (Throwable e) {
+            logger.log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
+        }
+*/
+
+//returns the same class
+/*
+        try {
+            final Class<?> anzSu10eb = findClass("o.anz$ძ", lpparam.classLoader);
+            try {
+                findAndHookMethod(anzSu10eb, "U", String.class, new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                        Class result = (Class)param.getResult();
+                        logger.log("anz.U: CLASS: " + result.getName() + ", requested: " + param.args[0]);
+                    }
+                });
+            } catch (Throwable e) {
+                logger.log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
+            }
+        }catch (Throwable e) {
+            logger.log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
+        }
+*/
+
+
+
+
+
+        //logging
+        try {
+            final Class<?> Logger = findClass("java.util.logging.Logger", lpparam.classLoader);
+            final Class<?> Level = findClass("java.util.logging.Level", lpparam.classLoader);
+            try {
+                findAndHookMethod(Logger, "isLoggable", Level, new XC_MethodHook() {
+                    @Override
+                    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                    }
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                        boolean isLoggable = (boolean)param.getResult();
+                        if (!isLoggable) {
+//                            logger.log("Overridden Logger.isLoggable:false");
+//                            param.setResult(true);
+                        }
+                    }
+                });
+            } catch (Throwable e) {
+                logger.log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
+            }
+        }catch (Throwable e) {
+            logger.log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
+        }
+
+
+
         //scanner draw radius
         final Class<?> r = findClass("o.r", lpparam.classLoader);
         try {
@@ -403,7 +607,7 @@ public class Ingress extends DefaultAbstractApp {
         }
 
         //disable disabling immersive move when opening COMM
-        final Class<?> avp = findClass("o.avq", lpparam.classLoader);
+        final Class<?> avp = findClass("o.avr", lpparam.classLoader);
         try {
             //this.\u02cf.getWindow().getDecorView().setSystemUiVisibility(256);
             findAndHookMethod(avp, "ʼ", new XC_MethodHook() {
@@ -418,7 +622,7 @@ public class Ingress extends DefaultAbstractApp {
 
         //do not wrap "uncaptured" to "unca..."
         try {
-            final Class<?> aju = findClass("o.ajv", lpparam.classLoader);
+            final Class<?> aju = findClass("o.ajx", lpparam.classLoader);
             //    private String \u02ca(final String s, final int n) {
             findAndHookMethod(aju, "ˊ", String.class, int.class, new XC_MethodHook() {
                 @Override
@@ -434,17 +638,16 @@ public class Ingress extends DefaultAbstractApp {
         }
 
         try {
-            final Class<?> aju = findClass("o.ajv", lpparam.classLoader);
-            final Class<?> akq = findClass("o.akr", lpparam.classLoader);
+            final Class<?> aju = findClass("o.ajx", lpparam.classLoader);
+            final Class<?> akq = findClass("o.akt", lpparam.classLoader);
             final Class<?> NativeLabelStyle = findClass("com.nianticproject.ingress.common.ui.widget.NativeLabel$NativeLabelStyle", lpparam.classLoader);
             final Class<?> NativeLabel = findClass("com.nianticproject.ingress.common.ui.widget.NativeLabel", lpparam.classLoader);
-            final Class<?> fd = findClass("o.fe", lpparam.classLoader);
             final Class<?> Color = findClass("com.badlogic.gdx.graphics.Color", lpparam.classLoader);
             final Class<?> Actor = findClass("com.badlogic.gdx.scenes.scene2d.Actor", lpparam.classLoader);
             final Class<?> Table = findClass("com.badlogic.gdx.scenes.scene2d.ui.Table", lpparam.classLoader);
             final Class<?> Image = findClass("com.badlogic.gdx.scenes.scene2d.ui.Image", lpparam.classLoader);
             final Class<?> Team = findClass("com.nianticproject.ingress.shared.Team", lpparam.classLoader);
-            final Class<?> ajt = findClass("o.aju", lpparam.classLoader);
+            final Class<?> ajt = findClass("o.ajw", lpparam.classLoader);
 
             findAndHookMethod(aju, "ˊ", String.class, new XC_MethodHook() {
                 @Override
@@ -467,6 +670,7 @@ public class Ingress extends DefaultAbstractApp {
 
                         return;
                     }
+                    logger.debugLog("HOOKED setText `" + label + "` in " + hookedClass);
                 }
             });
 
@@ -546,6 +750,7 @@ public class Ingress extends DefaultAbstractApp {
 
                             return;
                         }
+                        logger.debugLog("HOOKED setColor `" + label + "` in " + hookedClass);
 
                         return;
                     }
@@ -571,6 +776,7 @@ public class Ingress extends DefaultAbstractApp {
 
                             return;
                         }
+                        logger.debugLog("HOOKED setColorF `" + label + "` in " + hookedClass);
 
                         return;
                     }
