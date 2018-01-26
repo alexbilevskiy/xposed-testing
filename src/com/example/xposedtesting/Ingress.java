@@ -64,7 +64,7 @@ public class Ingress extends DefaultAbstractApp {
                     }
 
                     //get all real game params
-                    Float near, far, fieldOfView;
+                    Float near, far, fieldOfView, viewportWidth, viewportHeight;
                     Float directionX, directionY, directionZ, oldDirectionX, oldDirectionY, oldDirectionZ;
                     Float positionX, positionY, positionZ, oldPositionX, oldPositionY, oldPositionZ;
                     Float upX, upY, upZ, oldUpX, oldUpY, oldUpZ;
@@ -74,6 +74,8 @@ public class Ingress extends DefaultAbstractApp {
                     near = getFloatField(param.thisObject, "near");
                     far = getFloatField(param.thisObject, "far");
                     fieldOfView = getFloatField(param.thisObject, "fieldOfView");
+                    viewportWidth = getFloatField(param.thisObject, "viewportWidth");
+                    viewportHeight = getFloatField(param.thisObject, "viewportHeight");
 
                     direction = getObjectField(param.thisObject, "direction");
                     position = getObjectField(param.thisObject, "position");
@@ -89,10 +91,10 @@ public class Ingress extends DefaultAbstractApp {
                     oldUpY = getFloatField(up, "y");
                     oldUpZ = getFloatField(up, "z");
 
-                    logger.debugLog("PerspectiveCamera: props: near: " + near.toString() + ", far: " + far.toString() + ", fov: " + fieldOfView.toString());
+                    logger.debugLog("PerspectiveCamera: props: near: " + near.toString() +     ", far: " + far.toString() +         ", fov: " + fieldOfView.toString() + ", width: " + viewportWidth.toString() + ", height: " + viewportHeight.toString());
                     logger.debugLog("PerspectiveCamera: dir: x: " + oldDirectionX.toString() + ", y: " + oldDirectionY.toString() + ", z: " + oldDirectionZ.toString());
-                    logger.debugLog("PerspectiveCamera: pos: x: " + oldPositionX.toString() + ", y: " + oldPositionY.toString() + ", z: " + oldPositionZ.toString());
-                    logger.debugLog("PerspectiveCamera: up : x: " + oldUpX.toString() + ", y: " + oldUpY.toString() + ", z: " + oldUpZ.toString());
+                    logger.debugLog("PerspectiveCamera: pos: x: " + oldPositionX.toString() +  ", y: " + oldPositionY.toString() +  ", z: " + oldPositionZ.toString());
+                    logger.debugLog("PerspectiveCamera: up : x: " + oldUpX.toString() +        ", y: " + oldUpY.toString() +        ", z: " + oldUpZ.toString());
 
                     //prepare to change params
                     //skip all non-default scanner views
@@ -128,7 +130,7 @@ public class Ingress extends DefaultAbstractApp {
                     //set map scale
                     if (pref.getBoolean("scaleEnabled", false)) {
                         //link mode
-                        if (oldDirectionX == 0f && oldDirectionY == -1f && oldDirectionZ == 0f) {
+                        if (oldDirectionX == 0f && roundedDirectionY == -1000 && oldDirectionZ == 0f) {
                             setFloatField(param.thisObject, "near", pref.getFloat("near4link", 15f));
                             setFloatField(param.thisObject, "far", pref.getFloat("far4link", 2048f));
                             setFloatField(param.thisObject, "fieldOfView", pref.getFloat("fov4link", 40f));
@@ -197,6 +199,7 @@ public class Ingress extends DefaultAbstractApp {
                     }
                 }
             });
+
 
         } catch (Throwable e) {
             logger.log("EXCEPTION in PerspectiveCamera: " + e.getMessage() + ", " + e.getClass().toString());
