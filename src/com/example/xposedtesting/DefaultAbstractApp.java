@@ -119,12 +119,18 @@ public abstract class DefaultAbstractApp {
                         String params = "[";
                         for (Object arg :
                                 param.args) {
+                            String value = "unknown";
                             if(arg == null) {
-                                params += " null |";
-
-                                continue;
+                                value = "null";
+                            } else {
+                                Class argClass = arg.getClass();
+                                if (argClass == Float.class || argClass == Integer.class || argClass == String.class || argClass == boolean.class) {
+                                    value = "`" + arg.toString() + "`";
+                                } else {
+                                    value = argClass.toString();
+                                }
                             }
-                            params += " " + arg.getClass().toString() + " |";
+                            params += " " + value + " |";
                         }
                         params = params.substring(0, params.length() - 1) + "]";
                         logger.log("[M] " + thisClass + ", method: `" + methodName + "`, arguments (" + param.args.length + ") " + params);

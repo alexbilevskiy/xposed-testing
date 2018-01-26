@@ -56,6 +56,7 @@ public class Ingress extends DefaultAbstractApp {
 
         final Class<?> perspectiveCamera = findClass("com.badlogic.gdx.graphics.PerspectiveCamera", lpparam.classLoader);
         try {
+            hookAllMethods(perspectiveCamera);
             findAndHookMethod(perspectiveCamera, "update", boolean.class, new XC_MethodHook() {
                 @Override
                 protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
