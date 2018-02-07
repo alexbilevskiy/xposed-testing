@@ -52,7 +52,12 @@ public abstract class DefaultAbstractApp {
 
     public abstract void prepare(final XC_LoadPackage.LoadPackageParam lpparam);
 
-    protected void hookAllMethods(Class<?> clazz) {
+    protected void hookAllMethods(Class<?> clazz)
+    {
+        this.hookAllMethods(clazz, true);
+    }
+
+    protected void hookAllMethods(Class<?> clazz, boolean hookDeclaringClass) {
         String clazzName = clazz.toString();
         logger.log("[H] Preparing hooks for " + clazzName);
         for (Method m : clazz.getMethods()) {
@@ -62,6 +67,9 @@ public abstract class DefaultAbstractApp {
             if (declaringClass.equals(Object.class)) {
 
                 continue;
+            }
+            if (!hookDeclaringClass) {
+                declaringClass = clazz;
             }
             try {
                 logger.log("[H] would hook constructors of " + declaringClass.toString());
@@ -124,7 +132,7 @@ public abstract class DefaultAbstractApp {
                                 value = "null";
                             } else {
                                 Class argClass = arg.getClass();
-                                if (argClass == Float.class || argClass == Integer.class || argClass == String.class || argClass == boolean.class) {
+                                if (argClass == Float.class || argClass == Integer.class || argClass == String.class || argClass == Boolean.class) {
                                     value = "`" + arg.toString() + "`";
                                 } else {
                                     value = argClass.toString();
