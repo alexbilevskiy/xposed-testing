@@ -17,7 +17,7 @@ public class DefaultActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.default_activity);
 
-        SharedPreferences pref = getSharedPreferences("user_settings", MODE_WORLD_READABLE);
+            SharedPreferences pref = getSharedPreferences("user_settings", MODE_PRIVATE);
         final SharedPreferences.Editor editor = pref.edit();
 
         editor.putFloat("upX", 0f);

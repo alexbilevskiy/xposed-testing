@@ -12,14 +12,6 @@ import android.widget.Toast;
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XSharedPreferences;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
-import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.AbstractHttpClient;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -50,6 +42,7 @@ public class Ingress extends DefaultAbstractApp {
         logger.log("Preparing Ingress: hookIngressScanner");
         hookIngressScanner(lpparam);
         logger.log("Prepare Ingress success!");
+        logger.debugLog("INGRESS: DEBUG ENABLED!!!");
     }
 
     private void hookBadlogicCameraView(final XC_LoadPackage.LoadPackageParam lpparam) {
@@ -288,7 +281,9 @@ public class Ingress extends DefaultAbstractApp {
                     Map<String, List<String>> map = (Map) param.args[3];
                     String type = (String) param.args[5];
                     ByteArrayOutputStream inputData = new ByteArrayOutputStream();
-                    if (param.getResult().getClass() == GZIPInputStream.class) {
+                    if (param.getResult() == null) {
+                        logger.debugLog("s: NULL input! resp.uri: " + uriString + ", resp.code: " + httpCode.toString() + ", type: " + type + ", size: " + inputData.size());
+                    } else if (param.getResult().getClass() == GZIPInputStream.class) {
                         InputStream origIs = (InputStream) param.getResult();
                         byte[] buffer = new byte[1024];
                         int length;
@@ -342,12 +337,30 @@ public class Ingress extends DefaultAbstractApp {
                             } catch (Throwable e) {
                                 logger.log("JSON EXCEPTION " + e.getMessage());
                             }
+                        } else if(uriString.equals("https://m-dot-betaspike.appspot.com/rpc/gameplay/getObjectsInCells") && pref.getBoolean("noFields", false)) {
+                            try {
+                                JSONObject json = new JSONObject(inputData.toString());
+                                JSONArray result = json.getJSONObject("gameBasket").getJSONArray("gameEntities");
+                                JSONArray resultFiltered = new JSONArray();
+                                for (int i = 0; i < result.length(); i++) {
+                                    JSONArray row = (JSONArray) result.get(i);
+                                    JSONObject val = (JSONObject) row.get(2);
+                                    if (val.has("capturedRegion")) {
+                                        continue;
+                                    }
+                                    resultFiltered.put(row);
+                                }
+                                json.put("result", resultFiltered);
+                                inputDataBytes = json.toString().getBytes();
+                            } catch (Throwable e) {
+                                logger.log("JSON EXCEPTION " + e.getMessage());
+                            }
                         }
 
                         BufferedInputStream fakeIs = new BufferedInputStream(new ByteArrayInputStream(inputDataBytes));
                         param.setResult(fakeIs);
                     } else {
-                        logger.debugLog("s: input stream: NOT GZIP! " + param.getResult().getClass().toString());
+                        logger.debugLog("s: input stream: NOT GZIP! " + param.getResult().toString());
                     }
                     logger.debugLog("s: resp.uri: " + uriString + ", resp.code: " + httpCode.toString() + ", type: " + type + ", size: " + inputData.size());
 
@@ -567,7 +580,7 @@ public class Ingress extends DefaultAbstractApp {
 
 
 
-        //logging
+        //internal ingress logging (nothing interesting)
         try {
             final Class<?> Logger = findClass("java.util.logging.Logger", lpparam.classLoader);
             final Class<?> Level = findClass("java.util.logging.Level", lpparam.classLoader);
@@ -592,8 +605,6 @@ public class Ingress extends DefaultAbstractApp {
             logger.log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
         }
 
-
-
         //scanner draw radius
         final Class<?> r = findClass("o.r", lpparam.classLoader);
         try {
@@ -607,6 +618,23 @@ public class Ingress extends DefaultAbstractApp {
                     Object scannerKnobs = param.getResult();
                     setIntField(scannerKnobs, "rangeM", pref.getInt("scannerRangeM", 300));
                     param.setResult(scannerKnobs);
+                }
+            });
+        } catch (Throwable e) {
+            logger.log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
+        }
+        //max weapon rate
+        try {
+            //public static ClientWeaponKnobBundle \u02bc()
+            findAndHookMethod(r, "ʼ", new XC_MethodHook() {
+                @Override
+                protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                    if (debug) {
+                        pref.reload();
+                    }
+                    Object clientWeaponKnobBundle = param.getResult();
+                    setFloatField(clientWeaponKnobBundle, "maxFireRateSeconds", pref.getFloat("maxFireRateSeconds", 1.5f));
+                    param.setResult(clientWeaponKnobBundle);
                 }
             });
         } catch (Throwable e) {
@@ -627,6 +655,24 @@ public class Ingress extends DefaultAbstractApp {
             logger.log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
         }
 
+        //FPS debug ??
+        try {
+            final Class<?> aig = findClass("o.aig", lpparam.classLoader);
+            final Class<?> vv = findClass("o.vv", lpparam.classLoader);
+            findAndHookConstructor(aig, int.class, boolean.class, vv, new XC_MethodHook() {
+                @Override
+                protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                    logger.log("FPS: hooked constructor, params: " + param.args[0].toString() + ", " + param.args[1].toString());
+                    if (pref.getBoolean("fpsCounter", false)) {
+                        param.args[1] = true;
+                    }
+                }
+            });
+        } catch (Throwable e) {
+            logger.log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
+        }
+
+
         //do not wrap "uncaptured" to "unca..."
         try {
             final Class<?> aju = findClass("o.ajx", lpparam.classLoader);
@@ -644,6 +690,7 @@ public class Ingress extends DefaultAbstractApp {
             logger.log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
         }
 
+        //highlight nicknames for certain players
         try {
             final Class<?> aju = findClass("o.ajx", lpparam.classLoader);
             final Class<?> akq = findClass("o.akt", lpparam.classLoader);
@@ -677,7 +724,7 @@ public class Ingress extends DefaultAbstractApp {
                         if (label.equals("vl309")) {
                             newG = 1.0f;
                         }
-                        if (a.equals(newA) && r.equals(newR) || width == 15.0f) {
+                        if (a.equals(newA) && r.equals(newR) || width == pref.getFloat("portal_owner_nickname_width", 24.0f)) {
                             logger.debugLog("SET setText `" + label + "` in " + hookedClass + "(" + name + ", " + width.toString() + ")" + ", color: " + a.toString() + ", " + r.toString() + ", " + g.toString() + ", " + b.toString() + ", SKIPPING");
 
                             return;
@@ -815,10 +862,42 @@ public class Ingress extends DefaultAbstractApp {
         } catch (Throwable e) {
             logger.log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
         }
+
+        //map requests
+        try {
+//            final Class<?> mx = findClass("o.mx", lpparam.classLoader);
+//            //final Class<?> le = findClass("o.le", lpparam.classLoader);
+//            final Class<?> httpGet = findClass("org.apache.http.client.methods.HttpGet", lpparam.classLoader);
+//            hookAllMethods(mx, true, true, true);
+//            //hookAllMethods(le, true, true, true);
+//            findAndHookConstructor(httpGet, String.class, new XC_MethodHook() {
+//                @Override
+//                protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+//                    logger.log("HOOKED HTTP GET `" + param.args[0].toString() + "` in " + param.getClass().toString());
+//                }
+//            });
+            //var_dump(base64_encode(hex2bin(sha1(sha1('resonator') . '/2/17/79268/40873'))));
+
+            //\ufb52.if
+//            final Class<?> ufb52Sif = findClass("o.ﭒ$if", lpparam.classLoader);
+//            findAndHookMethod(ufb52Sif, "ˊ", byte[].class, new XC_MethodHook() {
+//                @Override
+//                protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+//                    byte[] p = (byte [])param.args[0];
+//                    String s = new String(p);
+//                    logger.log("HOOKED BYTE: `" + s + "`");
+//                }
+//            });
+
+        } catch (Throwable e) {
+            logger.log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
+        }
+
     }
 
     static private String cachedCookie, cachedToken;
 
+/*
     private void reportAuth(String cookie, String token) throws UnsupportedEncodingException, JSONException {
         if (cachedCookie != null && cachedToken != null) {
             if (cachedCookie.equals(cookie) && cachedToken.equals(token)) {
@@ -847,4 +926,5 @@ public class Ingress extends DefaultAbstractApp {
         cachedCookie = cookie;
         cachedToken = token;
     }
+*/
 }
