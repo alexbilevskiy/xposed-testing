@@ -1,0 +1,52 @@
+<?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<map>
+    <boolean name="enabled" value="true" />
+    <boolean name="debug" value="false" />
+    <boolean name="fpsCounter" value="false" />
+    <boolean name="noFields" value="false" />
+
+    <string name="commFilter">(ingressstore|ingress-store|ingress-shop|XMP BURSTERS|shop-ingress|in_farm|z0rd1n|ingress_help| linked |items-buy)</string>
+
+    <boolean name="scaleEnabled" value="true" />
+    <float name="far" value="1500.0" />
+    <float name="near" value="11.0" />
+    <float name="fov" value="120.0" />
+
+    <float name="far4link" value="2048.0" />
+    <float name="near4link" value="15.0" />
+    <float name="fov4link" value="40.0" />
+
+    <boolean name="posByUpEnabled" value="true"/>
+    <float name="coeffDefault" value="0.6" />
+    <float name="coeffFire" value="-0.5" />
+    <float name="coeffDeploy" value="-0.42" />
+    <float name="coeffRecharge" value="0.27" />
+
+    <boolean name="dirEnabled" value="true" />
+    <float name="dirX" value="0.0" />
+    <float name="dirY" value="-1.0"/>
+    <float name="dirZ" value="0.0" />
+
+    <boolean name="posEnabled" value="false"/>
+    <float name="posX" value="0" />
+    <float name="posY" value="528"/>
+    <float name="posZ" value="382.0"/>
+
+    <boolean name="upEnabled" value="false" />
+    <float name="upX" value="0"/>
+    <float name="upY" value="0.0" />
+    <float name="upZ" value="0.65" />
+
+    <int name="scannerRangeM" value="500" />
+    <int name="defaultRangeM" value="40" />
+    <boolean name="showGlobalMap" value="true" />
+
+    <float name="maxFireRateSeconds" value="1.0f"/>
+
+    <boolean name="colorEnabled" value="false" />
+    <float name="colorR" value="1.0"/>
+    <float name="colorG" value="0.0"/>
+    <float name="colorB" value="0.0"/>
+    <float name="colorA" value="1.0"/>
+
+</map>
