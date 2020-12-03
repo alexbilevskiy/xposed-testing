@@ -25,7 +25,7 @@ import static de.robv.android.xposed.XposedBridge.hookAllMethods;
 import static de.robv.android.xposed.XposedHelpers.findAndHookMethod;
 import static de.robv.android.xposed.XposedHelpers.findClass;
 
-public class xposedtesting implements IXposedHookInitPackageResources, IXposedHookLoadPackage {
+public class xposedtesting implements IXposedHookLoadPackage {
 
     Loggable logger;
 
@@ -33,15 +33,9 @@ public class xposedtesting implements IXposedHookInitPackageResources, IXposedHo
         this.logger = new Loggable(false);
     }
 
-    public void handleInitPackageResources(InitPackageResourcesParam resparam) throws Throwable {
-        if (resparam.packageName.equals("de.robv.android.xposed.installer")) {
-            //resparam.res.setReplacement("de.robv.android.xposed.installer", "string", "welcome", "APPLEBLOOM");
-        }
-    }
-
     public void handleLoadPackage(final XC_LoadPackage.LoadPackageParam lpparam) throws Throwable {
         switch (lpparam.packageName) {
-            case "com.nianticproject.ingress":
+            case "com.nianticlabs.ingress.prime.qa":
                 //prepareApp(lpparam, new Ingress());
                 Ingress I = new Ingress();
                 I.prepare(lpparam);

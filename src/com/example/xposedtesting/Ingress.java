@@ -479,35 +479,35 @@ public class Ingress extends DefaultAbstractApp {
             logger.log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
         }
 
-
-        try {
-//            final Class<?> aqw = findClass("o.aqw", lpparam.classLoader);
-//            final Class<?> ac = findClass("o.ac", lpparam.classLoader);
-            final Class<?> Native = findClass("com.nianticproject.ingress.common.utility.Native", lpparam.classLoader);
-
-            try {
-                findAndHookMethod(Native, "r", long.class, byte[].class, int.class, long.class, new XC_MethodHook() {
-                    @Override
-                    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                        byte[] bytes = (byte[]) param.args[1];
-                        String bytesString = Base64.encodeToString(bytes, Base64.NO_WRAP);
-
-                        logger.debugLog("blob generate: native params: " + param.args[0].toString() + ", " + "(bytes)" + ", " + param.args[2].toString() + ", " + param.args[3].toString() + ", bytes length: " + bytes.length + "/" + bytesString.length() + ", data: " + bytesString);
-                    }
+//native blob generation
+//        try {
+////            final Class<?> aqw = findClass("o.aqw", lpparam.classLoader);
+////            final Class<?> ac = findClass("o.ac", lpparam.classLoader);
+//            final Class<?> Native = findClass("com.nianticproject.ingress.common.utility.Native", lpparam.classLoader);
+//
+//            try {
+//                findAndHookMethod(Native, "r", long.class, byte[].class, int.class, long.class, new XC_MethodHook() {
 //                    @Override
-//                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-//                        byte[] bytes = (byte[]) param.getResult();
+//                    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+//                        byte[] bytes = (byte[]) param.args[1];
 //                        String bytesString = Base64.encodeToString(bytes, Base64.NO_WRAP);
-//                        logger.log("blob generate: native result: " + "(bytes)" + ", length: " + bytes.length + "/" + bytesString.length() + ", data: " + bytesString);
+//
+//                        logger.debugLog("blob generate: native params: " + param.args[0].toString() + ", " + "(bytes)" + ", " + param.args[2].toString() + ", " + param.args[3].toString() + ", bytes length: " + bytes.length + "/" + bytesString.length() + ", data: " + bytesString);
 //                    }
-                });
-            } catch (Throwable e) {
-                logger.log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
-            }
-
-        }catch (Throwable e) {
-            logger.log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
-        }
+////                    @Override
+////                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+////                        byte[] bytes = (byte[]) param.getResult();
+////                        String bytesString = Base64.encodeToString(bytes, Base64.NO_WRAP);
+////                        logger.log("blob generate: native result: " + "(bytes)" + ", length: " + bytes.length + "/" + bytesString.length() + ", data: " + bytesString);
+////                    }
+//                });
+//            } catch (Throwable e) {
+//                logger.log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
+//            }
+//
+//        }catch (Throwable e) {
+//            logger.log("EXCEPTION in IngressScanner: " + e.getMessage() + ", " + e.getClass().toString());
+//        }
 
 
 
